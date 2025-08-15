@@ -19,14 +19,39 @@ export default function SignUpTutor() {
     });
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    try {
-        
-    } catch (error) {
-        
-    }
+  const handleSubmit = async (e) => {
+  e.preventDefault();
 
+  try {
+    // Gather tutor-specific info from form state
+    const tutorData = {
+      courses: formData.courses,   // make sure formData has courses as an array or comma-separated string
+      bio: formData.bio,
+      location: formData.location,
+    };
+
+    // Send POST request to backend
+    const res = await fetch("http://localhost:3000/api/tutor/tutorProfile", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${localStorage.getItem("token")}`, 
+      },
+      credentials: 'include',
+      body: JSON.stringify(tutorData),
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      console.log("Tutor profile created:", data.profile);
+      // Optionally navigate to tutor dashboard or show success message
+    } else {
+      console.error("Error creating tutor profile:", data.message);
+    }
+  } catch (error) {
+    console.error("Network error:", error);
+  }
 };
 
 

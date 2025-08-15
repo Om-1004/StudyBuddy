@@ -11,7 +11,7 @@ export const signup = async (req, res) => {
     const savedUser = await newUser.save();
     const token = jwt.sign({ id: savedUser._id }, process.env.JWT_SECRET);
 
-    res.cookie("accessToken", token, { httpOnly: true });
+    res.cookie("accessToken", token, { httpOnly: true, secure: false, samesite: "lax", maxAge: 1000*60*60*24 } );
 
     console.log("Sign UP successful");
     res.status(201).json({ message: "User created successfully", userId: savedUser._id, role: savedUser.role });

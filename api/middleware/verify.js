@@ -1,20 +1,20 @@
-
 import jwt from "jsonwebtoken";
 
 export const verifyToken = (req, res, next) => {
-  const token = req.cookies.accessToken;
+  console.log('creating token ')
+  const token = req.cookies?.accessToken; // ✅ read from cookies
 
   if (!token) {
-    console.error("No token found in cookies");
-    return null
+    return res.status(401).json({ message: "User not authenticated" });
   }
-
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+  console.log('verifying token')
+  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
     if (err) {
-      console.error("Token verification failed:", err);
-      return null
+      return res.status(401).json({ message: "Token is invalid" });
     }
-    req.user = user;
+
+    req.user = decoded; // { id: <userId> }
+    console.log('token decoded')
     next();
   });
 };
