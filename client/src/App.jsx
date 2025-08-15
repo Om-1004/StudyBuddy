@@ -1,9 +1,9 @@
-import SignUpPage from "./pages/SignUpPage";
+import SignUpTutor from "./pages/SignUpTutor";
 
 export default function App() {
   return (
     <div>
-      <SignUpPage />
+      <SignUpTutor />
     </div>
   )
 }
