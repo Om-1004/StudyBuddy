@@ -15,6 +15,11 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    role: { 
+        type: String, 
+        enum: ['student','tutor'], 
+        required: true 
+    },
     avatar:{
         type: String,
         default: "https://static.vecteezy.com/system/resources/thumbnails/020/765/399/small/default-profile-account-unknown-icon-black-silhouette-free-vector.jpg"

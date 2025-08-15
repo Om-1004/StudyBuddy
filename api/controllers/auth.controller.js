@@ -3,18 +3,22 @@ import bcryptjs from "bcryptjs";
 import jwt from "jsonwebtoken"
 
 export const signup = async (req, res) => {
-    const { username, email, password } = req.body;
-    const hashedPassword = bcryptjs.hashSync(password, 12);
-    const newUser = new User({ username, email, password: hashedPassword });
+  const { username, email, password, role } = req.body;
+  const hashedPassword = bcryptjs.hashSync(password, 12);
+  const newUser = new User({ username, email, password: hashedPassword, role });
 
-    try {
-        await newUser.save();
-        console.log("Sign UP");
-        res.status(201).json({ message: "User created successfully" });
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({ message: "Sign Up Failed" });
-    }
+  try {
+    const savedUser = await newUser.save();
+    const token = jwt.sign({ id: savedUser._id }, process.env.JWT_SECRET);
+
+    res.cookie("accessToken", token, { httpOnly: true });
+
+    console.log("Sign UP successful");
+    res.status(201).json({ message: "User created successfully", userId: savedUser._id, role: savedUser.role });
+  } catch (error) {
+    console.error("Sign Up Failed:", error);
+    res.status(500).json({ message: "Sign Up Failed", error: error.message });
+  }
 };
 
 export const signin = async (req, res) => {
