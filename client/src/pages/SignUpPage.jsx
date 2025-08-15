@@ -39,9 +39,10 @@ const handleSubmit= async (e)=>{
       body: JSON.stringify(formData),
     });
     const data = await res.json();
-    console.log(data)
-    navigate('/signupTutor')
-
+    console.log(data.role)
+    if (data.role == 'tutor'){
+      navigate('/signupTutor')
+    }
   }
     catch (error) {
       console.log(error.message)
