@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { FcGoogle } from 'react-icons/fc';
 import {getAuth, GoogleAuthProvider, signInWithPopup} from "firebase/auth"
 import { app } from '../firebase';
-
+import api from '../axios/axios';
 export default function SignUpForm() {
   const [formData, setFormData] = useState({
     username: '',
@@ -23,18 +23,33 @@ export default function SignUpForm() {
     console.log('Sign up attempted with:', formData);
   };
 
-  const handleGoogleClick = async() =>{
+  const handleGoogleClick = async () => {
     try {
-        const provider = new GoogleAuthProvider()
-        const auth = getAuth(app)
+      const auth = getAuth(app);
+      const provider = new GoogleAuthProvider();
 
-        const result = await signInWithPopup(auth, provider)
-        console.log(result)
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+
+
+      const payload = {
+        username: user?.displayName,
+        email: user?.email
+      };
+
+      console.log(payload)
+
+      // const res = await api.post('/api/auth/google', payload);
+      console.log('Backend response:', res.data);
+
     } catch (error) {
-        console.log("Google error is: ",error);
+      if (error?.code !== 'auth/cancelled-popup-request') {
+        console.error('Google error is:', error);
+      }
     }
+  };
 
-}
+
   return (
     <div className="min-h-screen bg-black flex items-center justify-center px-4 py-8">
       <div className="w-full max-w-md">
