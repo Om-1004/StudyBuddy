@@ -16,5 +16,8 @@
     "url": "https://github.com/Om-1004/TutorConnect/issues"
   },
   "homepage": "https://github.com/Om-1004/TutorConnect#readme",
-  "description": ""
+  "description": "",
+  "dependencies": {
+    "mongodb": "^6.18.0"
+  }
 }
