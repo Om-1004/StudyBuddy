@@ -1,10 +1,14 @@
 import SignUpTutor from "./pages/SignUpTutor";
-import SignUpForm from "./pages/SignUpPage";
+import SignUpPage from "./pages/SignUpPage"
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 export default function App() {
-  return (
-    <div>
-      <SignUpForm />
-    </div>
-  )
+  return <BrowserRouter>
+  <Routes>
+    <Route path='/signup' element= {<SignUpPage />} />
+    <Route path='/signupTutor' element= {<SignUpTutor />} />
+  </Routes>
+  
+  </BrowserRouter>
+
 }

@@ -2,14 +2,21 @@ import React, { useState } from 'react';
 import { FcGoogle } from 'react-icons/fc';
 import {getAuth, GoogleAuthProvider, signInWithPopup} from "firebase/auth"
 import { app } from '../firebase';
+
 import api from '../axios/axios';
+
+import { useNavigate } from "react-router-dom"
+
 export default function SignUpForm() {
   const [formData, setFormData] = useState({
     username: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    role: 'student', // default value
   });
+  
+  const navigate = useNavigate();
 
   const handleInputChange = (e) => {
     setFormData({
@@ -18,10 +25,28 @@ export default function SignUpForm() {
     });
   };
 
-  const handleSubmit = (e) => {
+const handleSubmit= async (e)=>{
+
     e.preventDefault();
-    console.log('Sign up attempted with:', formData);
-  };
+    try {
+      const res = await fetch("http://localhost:3000/api/auth/signup",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      }, 
+      credentials: "include",
+      body: JSON.stringify(formData),
+    });
+    const data = await res.json();
+    console.log(data)
+    navigate('/signupTutor')
+
+  }
+    catch (error) {
+      console.log(error.message)
+    }
+  }
 
   const handleGoogleClick = async () => {
     try {
@@ -125,6 +150,33 @@ export default function SignUpForm() {
               className="w-full px-4 py-4 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-colors"
               required
             />
+          </div>
+          <div className="mb-4">
+            <label className="block text-white text-sm font-medium mb-2">I am a:</label>
+            <div className="flex items-center gap-6">
+              <label className="flex items-center gap-2 text-white">
+                <input
+                  type="radio"
+                  name="role"
+                  value="student"
+                  checked={formData.role === "student"}
+                  onChange={handleInputChange}
+                  className="accent-cyan-400"
+                />
+                Student
+              </label>
+              <label className="flex items-center gap-2 text-white">
+                <input
+                  type="radio"
+                  name="role"
+                  value="tutor"
+                  checked={formData.role === "tutor"}
+                  onChange={handleInputChange}
+                  className="accent-cyan-400"
+                />
+                Tutor
+              </label>
+            </div>
           </div>
 
           <button
