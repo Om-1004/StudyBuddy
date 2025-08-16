@@ -21,6 +21,7 @@ export default function App() {
         <Route path="/signin" element={<SignInPage />} />
         <Route path="/create-profile" element={<SignUpPage />} />
         <Route path="/chat" element={<DMChat />} />
+        <Route path='/login' element= {<LoginPage />} />
       </Routes>
     </BrowserRouter>
   );
