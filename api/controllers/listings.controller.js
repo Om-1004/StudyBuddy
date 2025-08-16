@@ -2,7 +2,7 @@ import User from '../models/user.js';
 
 export const filterUsers = async (req, res, next) => {
     try {
-        const { searchTerm, course, year, location } = req.query;
+        const { searchTerm, course, university, year, location } = req.query;
         
         let query = {};
         
@@ -15,6 +15,10 @@ export const filterUsers = async (req, res, next) => {
 
         if (course) {
             query.courses = { $in: [new RegExp(course, 'i')] };
+        }
+
+        if (university && university !== '') {
+             query.university = { $regex: university, $options: 'i' };
         }
 
         if (year && year !== 'All years') {
