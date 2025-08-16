@@ -10,9 +10,6 @@ import cookieParser from "cookie-parser";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import jwt from "jsonwebtoken";
-
-import authRouter from "./routes/auth.route.js";
-import tutorRouter from "./routes/tutor.route.js";
 import userRouter from "./routes/user.route.js"
 import Message from "./models/message.js";
 import { verifyToken } from "./middleware/verify.js";
@@ -41,7 +38,6 @@ app.use(express.json());
 /* ---------- REST Routes ---------- */
 app.use("/api/auth", authRouter);
 
-app.use("/api/tutor", tutorRouter);
 app.use("/api/users", userRouter);
 
 // Who am I (for DM UI to know my id/email)
@@ -68,7 +64,6 @@ function userAllowedInRoom(userId, room) {
 app.use("/api/listings", listingsRouter)
 
 
-// Fetch message history (protected). If DM, only participants may read.
 app.get("/api/messages/:roomId", verifyToken, async (req, res) => {
   const roomId = req.params.roomId;
   console.log(`📥 Fetching messages for room: ${roomId}, user: ${req.user.id}`);
@@ -96,7 +91,7 @@ const io = new Server(server, {
   },
 });
 
-// Authenticate sockets via auth.token or accessToken cookie
+// Authenticate sockets va auth.token or accessToken cookie
 io.use((socket, next) => {
   const tokenFromAuth = socket.handshake.auth?.token;
 
