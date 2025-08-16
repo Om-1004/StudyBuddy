@@ -64,7 +64,7 @@ const canadianUniversities = [
   "Wilfrid Laurier University",
   "York University",
 ];
-
+< BrowsePage
 const years = ["Freshman", "Sophomore", "Junior", "Senior"];
 const studyLocations = ["Coffee Shop", "Library", "Study Room", "Online"];
 
