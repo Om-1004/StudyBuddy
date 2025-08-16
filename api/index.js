@@ -12,6 +12,7 @@ import jwt from "jsonwebtoken";
 import userRouter from "./routes/user.route.js";
 import Message from "./models/message.js";
 import { verifyToken } from "./middleware/verify.js";
+import User from "./models/user.js"; // ⬅️ NEW: hydrate users for names
 
 dotenv.config();
 
@@ -19,7 +20,6 @@ mongoose
   .connect(process.env.MONGO)
   .then(async () => {
     console.log("Connected to Mongo");
-    // FIX: ensure indexes are built (important for perf)
     try {
       await Message.init();
       console.log("Message indexes ready");
@@ -48,6 +48,7 @@ app.use("/api/listings", listingsRouter);
 
 // Quick auth probe for client bootstrapping
 app.get("/api/me", verifyToken, (req, res) => {
+  console.log("👤 /api/me ->", req.user);
   res.json({ user: req.user });
 });
 
@@ -132,12 +133,27 @@ app.get("/api/conversations", verifyToken, async (req, res) => {
 
       const otherUserId = userId1 === userId ? userId2 : userId1;
 
+      // Try to get other user info from participants
       let otherUser = msg.participants.find((p) => p.id === otherUserId);
-      if (!otherUser) {
-        otherUser = {
-          id: otherUserId,
-          username: `User ${otherUserId.slice(-4)}`,
-        };
+
+      // If missing username/fullname, hydrate from DB
+      if (!otherUser || (!otherUser.username && !otherUser.fullname)) {
+        const u = await User.findById(otherUserId)
+          .select("_id email username fullname")
+          .lean();
+        if (u) {
+          otherUser = {
+            id: String(u._id),
+            email: u.email,
+            username: u.username,
+            fullname: u.fullname,
+          };
+        } else {
+          otherUser = {
+            id: otherUserId,
+            username: `User ${String(otherUserId).slice(-4)}`,
+          };
+        }
       }
 
       conversations.push({
@@ -165,7 +181,7 @@ const io = new Server(server, {
   },
 });
 
-// Authenticate sockets via auth.token or accessToken cookie
+// Authenticate sockets via auth.token or accessToken cookie (hydrate full user)
 io.use((socket, next) => {
   const tokenFromAuth = socket.handshake.auth?.token;
 
@@ -183,14 +199,31 @@ io.use((socket, next) => {
     return next(new Error("Authentication error: No token"));
   }
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+  jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
     if (err) {
       console.log("❌ Socket authentication failed: Invalid token", err.message);
       return next(new Error("Authentication error: Invalid token"));
     }
-    socket.user = decoded; // e.g., { id, email, ... }
-    console.log("✅ Socket authenticated for user:", decoded.id);
-    next();
+    try {
+      const u = await User.findById(decoded.id)
+        .select("_id email username fullname")
+        .lean();
+      if (!u) {
+        console.log("❌ Socket auth: user not found in DB:", decoded.id);
+        return next(new Error("Authentication error: user not found"));
+      }
+      socket.user = {
+        id: String(u._id),
+        email: u.email,
+        username: u.username,
+        fullname: u.fullname,
+      };
+      console.log("✅ Socket authenticated:", socket.user);
+      next();
+    } catch (dbErr) {
+      console.log("❌ Socket auth DB error:", dbErr?.message || dbErr);
+      next(new Error("Authentication error: DB failure"));
+    }
   });
 });
 
@@ -202,7 +235,6 @@ io.on("connection", (socket) => {
       console.log("❌ No/invalid room provided for join-room");
       return;
     }
-    // FIX: validate DM room format to prevent arbitrary leakage
     if (isDmRoom(room) && !DM_ROOM_RE.test(room)) {
       console.log(`❌ Invalid DM room format: ${room}`);
       return socket.emit("error", "Invalid DM room.");
@@ -226,7 +258,6 @@ io.on("connection", (socket) => {
       console.log("❌ Missing room or message");
       return;
     }
-    // FIX: validate format + membership again on send
     if (isDmRoom(room) && !DM_ROOM_RE.test(room)) {
       console.log(`❌ Invalid DM room format on send: ${room}`);
       return socket.emit("error", "Invalid DM room.");
@@ -237,7 +268,6 @@ io.on("connection", (socket) => {
     }
 
     try {
-      // Ensure sender is in the room so they receive the broadcast
       if (!socket.rooms.has(room)) {
         socket.join(room);
       }
@@ -245,7 +275,12 @@ io.on("connection", (socket) => {
       const doc = await Message.create({
         room,
         message: message.trim(),
-        sender: { id: socket.user.id, email: socket.user.email },
+        sender: {
+          id: socket.user.id,
+          email: socket.user.email,
+          username: socket.user.username,  // snapshot (optional)
+          fullname: socket.user.fullname,  // snapshot (optional)
+        },
       });
 
       console.log(`💾 Message saved with ID: ${doc._id}`);
@@ -259,7 +294,7 @@ io.on("connection", (socket) => {
       };
 
       console.log(`📡 Broadcasting message to room ${room}`);
-      io.to(room).emit("receive-message", messageData); // single emit
+      io.to(room).emit("receive-message", messageData);
     } catch (e) {
       console.error("❌ Failed to persist message:", e);
       socket.emit("error", "Failed to send message");
