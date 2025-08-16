@@ -2,6 +2,7 @@ import SignUpPage from "./pages/SignUpPage.jsx";
 import HomePage from "./components/HomePage.jsx"
 import Listings from "./pages/ListingsPage.jsx"
 import SignInPage from "./pages/LoginPage.jsx"
+import DMChat from "./components/DMChat.jsx";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 export default function App() {
@@ -12,6 +13,7 @@ export default function App() {
     <Route path='/listings' element={<Listings />} />
     <Route path='/signin' element={<SignInPage />} />
     <Route path="/create-profile" element={<SignUpPage />} />
+    <Route path='/chat' element={<DMChat />} />
   </Routes>
   
   </BrowserRouter>
