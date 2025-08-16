@@ -52,7 +52,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-[rgb(250,250,255)] flex items-center justify-center px-4 py-8">
       <div className="w-full max-w-md bg-white rounded-xl border py-8 px-6 shadow-sm">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-3xl font-bold text-[rgb(136,134,237)]  mb-2">
             Welcome Back
           </h1>
           <p className="text-sm text-gray-500">
