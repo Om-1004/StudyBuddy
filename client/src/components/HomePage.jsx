@@ -1,5 +1,7 @@
 import React from 'react'
 import HomeCard from '../components/HomeCard.jsx'
+import Navbar from '../components/Navbar.jsx'
+
 import { UsersRound , BookOpen , GraduationCap } from "lucide-react";
 
 export default function HomePage() {
@@ -20,6 +22,7 @@ export default function HomePage() {
   }];  
   return (
     <div>
+      <Navbar />
       <div className="flex flex-col space-y-8 border text-center bg-[#F0F0FA]">
         <div className="w-32 h-32 rounded-full bg-[#8976E9] flex items-center justify-center mx-auto mt-20 mb-0">
           <GraduationCap 
