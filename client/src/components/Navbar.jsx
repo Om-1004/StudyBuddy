@@ -1,16 +1,57 @@
+import React, { useState } from "react";
+import { GraduationCap, House, UsersRound, CircleUser, Menu, X } from "lucide-react";
 
 export default function Navbar() {
-    return(
-        <div className="flex justify-around bg-[#070707]"> 
-            <div className="flex gap-4"> 
-                <img 
-                class="h-15 w-11"
-                src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/TMU_logo.svg/1024px-TMU_logo.svg.png" /> 
-                <div className="">
-                    <h1 className="text-[#00C6E8] text-sm"> Tutor Connect </h1>
-                    <h2 className="text-[#00C6E8] text-sm"> All Canadian Universities </h2>
-                </div>
-            </div>
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <nav className="bg-[#FAFAFF] sticky top-0 z-50 shadow-md px-4 md:px-20 py-4">
+      <div className="flex justify-between items-center">
+        <div className="flex gap-3 items-center">
+          <div className="p-2 rounded-md bg-[#8776E9] flex items-center justify-center">
+            <GraduationCap className="text-black w-6 h-6" />
+          </div>
+          <p className="text-xl md:text-2xl font-bold">Study Buddy</p>
         </div>
-    );
+
+        <div className="hidden md:flex gap-5 items-center">
+          <button className="flex items-center gap-2 bg-[#6270E9] text-white rounded-md px-4 py-1 hover:bg-[#7c89ff] cursor-pointer">
+            <House className="w-4 h-4" />
+            Home
+          </button>
+          <button className="flex items-center gap-2 text-black rounded-md px-4 py-1 hover:bg-[#FFDBE9] cursor-pointer">
+            <UsersRound className="w-4 h-4" />
+            Browse
+          </button>
+          <button className="flex items-center gap-2 text-black rounded-md px-4 py-1 hover:bg-[#FFDBE9] cursor-pointer">
+            <CircleUser className="w-4 h-4" />
+            Create Profile
+          </button>
+        </div>
+
+        <div className="md:hidden flex items-center">
+          <button onClick={() => setIsOpen(!isOpen)}>
+            {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
+        </div>
+      </div>
+
+      {isOpen && (
+        <div className="flex flex-col gap-2 mt-4 md:hidden">
+          <button className="flex items-center gap-2 bg-[#6270E9] text-white rounded-md px-4 py-2 hover:bg-[#7c89ff]">
+            <House className="w-4 h-4" />
+            Home
+          </button>
+          <button className="flex items-center gap-2 text-black rounded-md px-4 py-2 hover:bg-[#FFDBE9]">
+            <UsersRound className="w-4 h-4" />
+            Browse
+          </button>
+          <button className="flex items-center gap-2 text-black rounded-md px-4 py-2 hover:bg-[#FFDBE9]">
+            <CircleUser className="w-4 h-4" />
+            Create Profile
+          </button>
+        </div>
+      )}
+    </nav>
+  );
 }
