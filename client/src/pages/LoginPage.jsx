@@ -124,7 +124,6 @@ export default function LoginPage() {
             <FcGoogle size={24} />
             Sign in with Google
           </button> */}
-        </form>
         <div className="text-center mt-8">
           <p className="text-gray-500">
             Don’t have an account?{" "}
@@ -139,5 +138,6 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  </div>
   );
 }

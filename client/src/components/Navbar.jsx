@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { GraduationCap, House, UsersRound, CircleUser, Menu, X } from "lucide-react";
+import { Link } from "react-router-dom";
+import { GraduationCap, House, UsersRound, CircleUser, Menu, X, MessageCircle } from "lucide-react";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -15,18 +16,22 @@ export default function Navbar() {
         </div>
 
         <div className="hidden md:flex gap-5 items-center">
-          <button className="flex items-center gap-2 bg-[#6270E9] text-white rounded-md px-4 py-1 hover:bg-[#7c89ff] cursor-pointer">
+          <Link to="/homepage" className="flex items-center gap-2 bg-[#6270E9] text-white rounded-md px-4 py-2 hover:bg-[#7c89ff] cursor-pointer">
             <House className="w-4 h-4" />
             Home
-          </button>
-          <button className="flex items-center gap-2 text-black rounded-md px-4 py-1 hover:bg-[#FFDBE9] cursor-pointer">
+          </Link>
+          <Link to="/listings" className="flex items-center gap-2 text-black rounded-md px-4 py-2 hover:bg-[#FFDBE9] cursor-pointer">
             <UsersRound className="w-4 h-4" />
             Browse
+          </Link>
+          <button className="flex items-center gap-2 text-black rounded-md px-4 py-2 hover:bg-[#FFDBE9] cursor-pointer">
+            <MessageCircle className="w-4 h-4" />
+            Messages
           </button>
-          <button className="flex items-center gap-2 text-black rounded-md px-4 py-1 hover:bg-[#FFDBE9] cursor-pointer">
+          <Link to="/signup" className="flex items-center gap-2 text-black rounded-md px-4 py-2 hover:bg-[#FFDBE9] cursor-pointer">
             <CircleUser className="w-4 h-4" />
             Create Profile
-          </button>
+          </Link>
         </div>
 
         <div className="md:hidden flex items-center">
@@ -45,6 +50,10 @@ export default function Navbar() {
           <button className="flex items-center gap-2 text-black rounded-md px-4 py-2 hover:bg-[#FFDBE9]">
             <UsersRound className="w-4 h-4" />
             Browse
+          </button>
+          <button className="flex items-center gap-2 text-black rounded-md px-4 py-2 hover:bg-[#FFDBE9]">
+            <MessageCircle className="w-4 h-4" />
+            Messages
           </button>
           <button className="flex items-center gap-2 text-black rounded-md px-4 py-2 hover:bg-[#FFDBE9]">
             <CircleUser className="w-4 h-4" />
