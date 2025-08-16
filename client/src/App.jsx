@@ -1,6 +1,6 @@
 import SignUpPage from "./pages/SignUpPage.jsx";
 import HomePage from "./components/HomePage.jsx"
-import Listings from "./pages/Listings.jsx"
+import Listings from "./pages/ListingsPage.jsx"
 import SignInPage from "./pages/LoginPage.jsx"
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
