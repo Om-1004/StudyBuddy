@@ -1,4 +1,3 @@
-
 import React from 'react'
 import HomeCard from '../components/HomeCard.jsx'
 import Navbar from '../components/Navbar.jsx'
@@ -60,8 +59,7 @@ export default function HomePage() {
           <p className="text-black text-sm"> Create Profile </p>
         </button>
         <div className="flex flex-wrap justify-center gap-8 mt-10">
-          {propArray.map((item, index) => 
-
+          {propArray.map((item, index) => (
             <HomeCard 
               key={index}
               icon={item.icon}
@@ -74,6 +72,6 @@ export default function HomePage() {
       </div>
 
     </div>  
-  )
 
-}
+
+)}

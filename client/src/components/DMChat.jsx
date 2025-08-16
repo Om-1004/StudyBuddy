@@ -2,6 +2,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { io } from "socket.io-client";
 import { Search, Paperclip, Smile, Send, Plus } from "lucide-react";
+import Navbar from "./Navbar";
 
 /* ---------------- debug helpers ---------------- */
 const DEBUG = true;
@@ -395,7 +396,10 @@ export default function DMChat() {
   }
 
   return (
+  <div>
+    <Navbar />
     <div className="h-screen bg-gray-100 flex">
+      
       {/* Sidebar */}
       <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
         <div className="p-6 border-b border-gray-200">
@@ -589,5 +593,6 @@ export default function DMChat() {
         </div>
       </div>
     </div>
+  </div>
   );
 }

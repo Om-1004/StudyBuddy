@@ -48,7 +48,7 @@ export default function Navbar() {
         {/* Desktop nav */}
         <div className="hidden md:flex gap-5 items-center">
 
-          <NavLink to="/homepage" className={getButtonClass("/homepage")}>
+          <NavLink to="/" className={getButtonClass("/homepage")}>
             <House className="w-4 h-4" />
             Home
           </NavLink>
