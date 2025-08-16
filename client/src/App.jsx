@@ -3,7 +3,7 @@ import HomePage from "./components/HomePage.jsx"
 import Listings from "./pages/Listings.jsx"
 import SignInPage from "./pages/LoginPage.jsx"
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-
+import SignUpFlow from "./pages/SignUpFlow";
 
 export default function App() {
   return <BrowserRouter>
