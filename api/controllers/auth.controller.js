@@ -1,11 +1,7 @@
-// controllers/auth.controller.js
 import User from "../models/user.js";
 import bcryptjs from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-/* =======================
-   Cookie & JWT utilities
-   ======================= */
 const COOKIE_NAME = "accessToken";
 const WEEK_MS = 1000 * 60 * 60 * 24 * 7;
 
@@ -13,28 +9,20 @@ function cookieOptions() {
   const isProd = process.env.NODE_ENV === "production";
   return {
     httpOnly: true,
-    // In local dev (http://localhost:3000 ⇄ 5173), Lax is fine.
-    // For cross-site HTTPS (custom domains), use SameSite=None; Secure=true.
     sameSite: isProd ? "None" : "Lax",
-    secure: isProd, // must be true when SameSite=None and using HTTPS
+    secure: isProd,
     maxAge: WEEK_MS,
   };
 }
 
 function signJwt(payload) {
-  // Add an expiry if you want (e.g. 7d). Optional but recommended.
   return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "7d" });
 }
 
 function toSafeUser(u) {
-  // Strip sensitive fields; normalize shape
   const { password, __v, ...rest } = u.toObject ? u.toObject() : u;
   return rest;
 }
-
-/* =========
-   Handlers
-   ========= */
 
 export const signup = async (req, res) => {
   try {
@@ -98,7 +86,6 @@ export const signin = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Basic guards
     if (!email || !password) {
       return res.status(400).json({ message: "Email and password are required" });
     }
@@ -123,7 +110,6 @@ export const signin = async (req, res) => {
 
 export const signout = async (_req, res) => {
   try {
-    // Clear with the same attributes used when setting it
     const opts = cookieOptions();
     res.clearCookie(COOKIE_NAME, {
       httpOnly: true,
@@ -137,16 +123,10 @@ export const signout = async (_req, res) => {
   }
 };
 
-/**
- * GET /api/me
- * If you have a verifyToken middleware that sets req.userId, prefer that.
- * Otherwise, this handler will try to read & verify the cookie directly.
- */
 export const me = async (req, res) => {
   try {
     const token =
       req.cookies?.[COOKIE_NAME] ||
-      // Some setups (e.g., proxies) may pass cookies in headers.
       (req.headers?.cookie || "")
         .split(";")
         .map((s) => s.trim())

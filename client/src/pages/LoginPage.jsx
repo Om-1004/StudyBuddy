@@ -31,7 +31,7 @@ export default function LoginPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(payload),
-        credentials: 'include', // This is the crucial line to add
+        credentials: 'include',
       });
 
       const data = await res.json();
@@ -41,12 +41,10 @@ export default function LoginPage() {
       }
 
       console.log(data);
-      // Navigate to the homepage on successful sign-in
       navigate("/");
 
     } catch (error) {
       console.error("Sign In Failed:", error.message);
-      // You can add more user-friendly error handling here
     }
   };
 
@@ -113,14 +111,6 @@ export default function LoginPage() {
             </div>
           </div>
           
-          {/* Uncomment if you want the Google sign-in button */}
-          {/* <button
-            type="button"
-            className="w-full bg-white text-gray-800 py-3 px-6 rounded-lg font-semibold text-lg hover:bg-gray-100 transition-colors border border-gray-700 flex items-center justify-center gap-3"
-          >
-            <FcGoogle size={24} />
-            Sign in with Google
-          </button> */}
         </form>
         <div className="text-center mt-8">
           <p className="text-gray-500">

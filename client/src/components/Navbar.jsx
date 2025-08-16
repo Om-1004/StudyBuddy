@@ -17,7 +17,6 @@ export default function Navbar() {
   const [isAuthed, setIsAuthed] = useState(false);
   const navigate = useNavigate();
 
-  // Probe auth on mount and whenever the route changes
   useEffect(() => {
     (async () => {
       try {
@@ -100,7 +99,6 @@ export default function Navbar() {
           )}
         </div>
 
-        {/* Mobile toggle */}
         <div className="md:hidden flex items-center">
           <button aria-label="Toggle menu" onClick={() => setIsOpen((s) => !s)}>
             {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -108,7 +106,6 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile menu */}
       {isOpen && (
         <div className="flex flex-col gap-2 mt-4 md:hidden">
           <NavLink to="/" className={navButtonClass("/")} onClick={() => setIsOpen(false)}>

@@ -1,10 +1,8 @@
-// DMChat.jsx (responsive + cookie-based auth; no token reading from JS)
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { io } from "socket.io-client";
 import { Search, Paperclip, Smile, Send, Plus, Menu, X, ChevronLeft } from "lucide-react";
 import Navbar from "./Navbar";
 
-/* ---------------- debug helpers ---------------- */
 const DEBUG = true;
 const debug = (...args) => DEBUG && console.log("[DMChat]", ...args);
 const group = (label) => DEBUG && console.group(label);
@@ -37,7 +35,6 @@ function logConvList(convs, label = "Conversations") {
   groupEnd();
 }
 
-/* ---------------- helpers ---------------- */
 function displayName(other) {
   const n1 = (other?.fullname || "").trim();
   const n2 = (other?.username || "").trim();
@@ -57,7 +54,7 @@ function parseDmRoom(room) {
 }
 
 async function resolveUserByUsername(username) {
-  debug("🔍 Resolving user by username:", username);
+  debug("Resolving user by username:", username);
   const res = await fetch(
     `http://localhost:3000/api/users/lookup?username=${encodeURIComponent(username)}`,
     { credentials: "include" }
@@ -80,18 +77,15 @@ async function loadConversations() {
   return data.conversations || [];
 }
 
-/* ---------------- component ---------------- */
 export default function DMChat() {
   const [authed, setAuthed] = useState(false);
   const [me, setMe] = useState(null);
 
-  // NEW: mobile sidebar visibility
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // socket (create once we know we're authenticated)
   const socket = useMemo(() => {
     if (!authed) {
-      debug("❌ Not authenticated, not creating socket");
+      debug("Not authenticated, not creating socket");
       return null;
     }
     debug("🔌 Creating socket connection (cookie-based auth)");
@@ -100,7 +94,6 @@ export default function DMChat() {
     });
   }, [authed]);
 
-  // ui state
   const [isCreating, setIsCreating] = useState(false);
   const [newUsername, setNewUsername] = useState("");
   const [conversations, setConversations] = useState([]);
@@ -111,20 +104,16 @@ export default function DMChat() {
   const [newMessage, setNewMessage] = useState("");
   const [loadingConversations, setLoadingConversations] = useState(false);
 
-  // scroll & refs
   const messagesEndRef = useRef(null);
   const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
 
-  // latest activeRoom for stable listener
   const activeRoomRef = useRef("");
   useEffect(() => {
     activeRoomRef.current = activeRoom;
   }, [activeRoom]);
 
-  // dedupe messages by _id within a room
   const seenIdsRef = useRef(new Set());
 
-  /* ------- bootstrap: probe /api/me, then load conversations ------- */
   useEffect(() => {
     (async () => {
       try {
@@ -142,32 +131,30 @@ export default function DMChat() {
       } catch (e) {
         setAuthed(false);
         setMe(null);
-        console.error("[DMChat] ❌ Not authenticated or bootstrap failed:", e);
+        console.error("[DMChat] Not authenticated or bootstrap failed:", e);
       } finally {
         setLoadingConversations(false);
       }
     })();
   }, []);
 
-  // log whenever "me" changes
   useEffect(() => {
     if (me) logUser("Me (state change)", me);
   }, [me]);
 
-  // stable socket listeners
   useEffect(() => {
     if (!socket) return;
 
     const onConnect = () => {
-      debug("✅ Socket connected:", socket.id);
+      debug("Socket connected:", socket.id);
       if (activeRoomRef.current) {
-        debug("🏠 Re-joining room after connect:", activeRoomRef.current);
+        debug("Re-joining room after connect:", activeRoomRef.current);
         socket.emit("join-room", activeRoomRef.current);
       }
     };
 
     const onReceive = (data) => {
-      debug("📨 receive-message:", {
+      debug("receive-message:", {
         _id: data?._id,
         room: data?.room,
         sender: data?.sender,
@@ -232,7 +219,6 @@ export default function DMChat() {
     };
   }, [socket, me]);
 
-  // disconnect socket on unmount
   useEffect(() => {
     return () => {
       if (socket) {
@@ -244,7 +230,6 @@ export default function DMChat() {
     };
   }, [socket]);
 
-  // join whenever activeRoom changes, and reset room-local deduper
   useEffect(() => {
     if (socket && activeRoom) {
       debug("🏠 Joining room:", activeRoom);
@@ -257,7 +242,6 @@ export default function DMChat() {
     scrollToBottom();
   }, [messages]);
 
-  // actions
   const startConversation = async (e) => {
     e?.preventDefault?.();
     if (!socket || !me) {
@@ -342,16 +326,16 @@ export default function DMChat() {
 
   const handleSendMessage = () => {
     if (!socket) {
-      debug("❌ No socket connection");
+      debug("No socket connection");
       return;
     }
     const text = newMessage.trim();
     if (!text || !activeRoom) {
-      debug("❌ Cannot send:", { hasText: !!text, activeRoom });
+      debug("Cannot send:", { hasText: !!text, activeRoom });
       return;
     }
 
-    debug("📤 Sending message:", { room: activeRoom, textPreview: text.substring(0, 80) });
+    debug("Sending message:", { room: activeRoom, textPreview: text.substring(0, 80) });
     socket.emit("message", { room: activeRoom, message: text });
     setNewMessage("");
   };
@@ -364,7 +348,7 @@ export default function DMChat() {
     return name.includes(q) || idStr.includes(q);
   });
 
-  /* ------- render ------- */
+  /* ------- rende ------- */
   if (!authed) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center text-gray-700 px-4">
@@ -375,7 +359,6 @@ export default function DMChat() {
 
   return (
     <div className="h-screen w-full bg-gray-100 flex flex-col">
-      {/* Top bar (mobile) */}
       <div className="flex md:hidden items-center justify-between bg-white border-b border-gray-200 px-4 py-3">
         <button
           onClick={() => setSidebarOpen(true)}
@@ -389,7 +372,6 @@ export default function DMChat() {
       </div>
 
       <div className="flex-1 flex overflow-hidden">
-        {/* Sidebar (desktop) */}
         <div className="hidden md:flex md:w-80 bg-white border-r border-gray-200 flex-col">
           <Sidebar
             isCreating={isCreating}
@@ -407,7 +389,6 @@ export default function DMChat() {
           />
         </div>
 
-        {/* Sidebar Drawer (mobile) */}
         {sidebarOpen && (
           <>
             <div
@@ -447,12 +428,9 @@ export default function DMChat() {
           </>
         )}
 
-        {/* Main Chat */}
         <div className="flex-1 flex flex-col min-w-0">
-          {/* Chat header */}
           <div className="bg-white border-b border-gray-200 px-4 md:px-6 py-3 md:py-4 flex items-center justify-between">
             <div className="flex items-center gap-2 md:gap-3 min-w-0">
-              {/* Back button (mobile) */}
               <button
                 onClick={() => setSidebarOpen(true)}
                 className="md:hidden p-2 rounded-md hover:bg-gray-100 shrink-0"
@@ -475,7 +453,6 @@ export default function DMChat() {
             </div>
           </div>
 
-          {/* Messages */}
           <div className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4 bg-gray-50">
             {!activeRoom ? (
               <div className="h-full flex items-center justify-center text-gray-500 text-sm md:text-base">
@@ -519,7 +496,6 @@ export default function DMChat() {
             )}
           </div>
 
-          {/* Composer */}
           <div className="bg-white border-t border-gray-200 p-3 sm:p-4">
             <div className="flex items-center gap-2 sm:gap-3">
               <button
@@ -564,7 +540,6 @@ export default function DMChat() {
   );
 }
 
-/* ---------- Sidebar as a subcomponent for reuse (desktop & drawer) ---------- */
 function Sidebar({
   isCreating,
   setIsCreating,

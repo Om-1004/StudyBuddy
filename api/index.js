@@ -1,4 +1,3 @@
-// api/index.js
 import express from "express";
 import cors from "cors";
 import authRouter from "./routes/auth.route.js";
@@ -29,7 +28,6 @@ mongoose
   })
   .catch((err) => console.log(err));
 
-/* ---------- App & Middleware ---------- */
 const app = express();
 const server = createServer(app);
 
@@ -46,13 +44,11 @@ app.use("/api/auth", authRouter);
 app.use("/api/users", userRouter);
 app.use("/api/listings", listingsRouter);
 
-// Quick auth probe for client bootstrapping
 app.get("/api/me", verifyToken, (req, res) => {
   console.log("👤 /api/me ->", req.user);
   res.json({ user: req.user });
 });
 
-/* ---------- DM helpers ---------- */
 const DM_ROOM_RE = /^dm:([A-Za-z0-9]+)\|([A-Za-z0-9]+)$/;
 
 function isDmRoom(room) {
@@ -65,13 +61,12 @@ function parseDmRoom(room) {
   return [a, b];
 }
 function userAllowedInRoom(userId, room) {
-  if (!isDmRoom(room)) return true; // non-DM rooms allowed for now
+  if (!isDmRoom(room)) return true;
   const [a, b] = parseDmRoom(room);
   if (!a || !b) return false;
   return userId === a || userId === b;
 }
 
-/* ---------- REST: history & conversations ---------- */
 app.get("/api/messages/:roomId", verifyToken, async (req, res) => {
   const roomId = req.params.roomId;
   console.log(`📥 Fetching messages for room: ${roomId}, user: ${req.user.id}`);
@@ -91,7 +86,6 @@ app.get("/api/messages/:roomId", verifyToken, async (req, res) => {
   }
 });
 
-// Get user's conversations (rooms they've participated in)
 app.get("/api/conversations", verifyToken, async (req, res) => {
   const userId = req.user.id;
   console.log(`📥 Fetching conversations for user: ${userId}`);
@@ -133,10 +127,8 @@ app.get("/api/conversations", verifyToken, async (req, res) => {
 
       const otherUserId = userId1 === userId ? userId2 : userId1;
 
-      // Try to get other user info from participants
       let otherUser = msg.participants.find((p) => p.id === otherUserId);
 
-      // If missing username/fullname, hydrate from DB
       if (!otherUser || (!otherUser.username && !otherUser.fullname)) {
         const u = await User.findById(otherUserId)
           .select("_id email username fullname")
@@ -172,7 +164,6 @@ app.get("/api/conversations", verifyToken, async (req, res) => {
   }
 });
 
-/* ---------- Socket.IO ---------- */
 const io = new Server(server, {
   cors: {
     origin: "http://localhost:5173",
@@ -181,11 +172,9 @@ const io = new Server(server, {
   },
 });
 
-// Authenticate sockets via auth.token or accessToken cookie (hydrate full user)
 io.use((socket, next) => {
   const tokenFromAuth = socket.handshake.auth?.token;
 
-  // fallback: read accessToken from Cookie header
   const cookieHeader = socket.handshake.headers?.cookie || "";
   const cookieToken = cookieHeader
     .split(";")
@@ -278,8 +267,8 @@ io.on("connection", (socket) => {
         sender: {
           id: socket.user.id,
           email: socket.user.email,
-          username: socket.user.username,  // snapshot (optional)
-          fullname: socket.user.fullname,  // snapshot (optional)
+          username: socket.user.username,
+          fullname: socket.user.fullname,
         },
       });
 
@@ -306,7 +295,7 @@ io.on("connection", (socket) => {
   });
 });
 
-/* ---------- Start ---------- */
+/* ---------- Strt ---------- */
 server.listen(3000, () => {
   console.log("🚀 Server listening on port: 3000");
 });

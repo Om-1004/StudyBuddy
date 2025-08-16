@@ -3,7 +3,6 @@ import { ChevronLeft, Plus, X } from "lucide-react";
 import api from "../axios/axios";
 import { useNavigate, Link } from "react-router-dom";
 
-// ---- Static Data ----
 const canadianUniversities = [
   "Acadia University",
   "Algoma University",
@@ -69,7 +68,6 @@ const canadianUniversities = [
 const years = ["Freshman", "Sophomore", "Junior", "Senior"];
 const studyLocations = ["Coffee Shop", "Library", "Study Room", "Online"];
 
-// ---- Reusable Input Component ----
 const InputField = ({ label, type = "text", name, value, onChange, placeholder }) => (
   <div>
     <label className="block text-gray-500 text-sm font-medium mb-2">{label}</label>
@@ -87,7 +85,6 @@ const InputField = ({ label, type = "text", name, value, onChange, placeholder }
   </div>
 );
 
-// ---- Main Component ----
 export default function SignUpPage() {
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState({
@@ -107,7 +104,6 @@ export default function SignUpPage() {
   const [currentCourse, setCurrentCourse] = useState("");
   const navigate = useNavigate();
 
-  // ---- Handlers ----
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     if (name === "university") {
@@ -159,7 +155,6 @@ export default function SignUpPage() {
     }
   };
 
-  // ---- Validation ----
   const isAccountStepValid = () => {
     const basic =
       formData.fullname.trim() &&
@@ -380,7 +375,6 @@ export default function SignUpPage() {
     }
   };
 
-  // ---- Step Titles/Descriptions ----
   const stepTitles = [
     "Create your account",
     "Tell us about yourself",
