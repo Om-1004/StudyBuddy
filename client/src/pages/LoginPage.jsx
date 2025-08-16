@@ -40,7 +40,7 @@ export default function LoginPage() {
 
       console.log(data);
       // Navigate to the homepage on successful sign-in
-      navigate("/homepage");
+      navigate("/");
 
     } catch (error) {
       console.error("Sign In Failed:", error.message);
