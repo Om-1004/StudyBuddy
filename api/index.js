@@ -17,7 +17,16 @@ dotenv.config();
 
 mongoose
   .connect(process.env.MONGO)
-  .then(() => console.log("Connected to Mongo"))
+  .then(async () => {
+    console.log("Connected to Mongo");
+    // FIX: ensure indexes are built (important for perf)
+    try {
+      await Message.init();
+      console.log("Message indexes ready");
+    } catch (e) {
+      console.warn("Failed to build Message indexes:", e?.message || e);
+    }
+  })
   .catch((err) => console.log(err));
 
 /* ---------- App & Middleware ---------- */
@@ -37,22 +46,27 @@ app.use("/api/auth", authRouter);
 app.use("/api/users", userRouter);
 app.use("/api/listings", listingsRouter);
 
+// Quick auth probe for client bootstrapping
 app.get("/api/me", verifyToken, (req, res) => {
   res.json({ user: req.user });
 });
 
 /* ---------- DM helpers ---------- */
+const DM_ROOM_RE = /^dm:([A-Za-z0-9]+)\|([A-Za-z0-9]+)$/;
+
 function isDmRoom(room) {
   return typeof room === "string" && room.startsWith("dm:");
 }
 function parseDmRoom(room) {
+  if (!DM_ROOM_RE.test(room)) return [null, null];
   const raw = room.slice(3);
   const [a, b] = raw.split("|");
   return [a, b];
 }
 function userAllowedInRoom(userId, room) {
-  if (!isDmRoom(room)) return true; // public/group rooms allowed
+  if (!isDmRoom(room)) return true; // non-DM rooms allowed for now
   const [a, b] = parseDmRoom(room);
+  if (!a || !b) return false;
   return userId === a || userId === b;
 }
 
@@ -65,6 +79,7 @@ app.get("/api/messages/:roomId", verifyToken, async (req, res) => {
     console.log(`❌ User ${req.user.id} not allowed in room ${roomId}`);
     return res.status(403).json({ message: "Forbidden" });
   }
+
   try {
     const messages = await Message.find({ room: roomId }).sort({ createdAt: 1 });
     console.log(`✅ Found ${messages.length} messages for room ${roomId}`);
@@ -113,6 +128,8 @@ app.get("/api/conversations", verifyToken, async (req, res) => {
       if (!isDmRoom(room)) continue;
 
       const [userId1, userId2] = parseDmRoom(room);
+      if (!userId1 || !userId2) continue;
+
       const otherUserId = userId1 === userId ? userId2 : userId1;
 
       let otherUser = msg.participants.find((p) => p.id === otherUserId);
@@ -171,7 +188,7 @@ io.use((socket, next) => {
       console.log("❌ Socket authentication failed: Invalid token", err.message);
       return next(new Error("Authentication error: Invalid token"));
     }
-    socket.user = decoded; // e.g., { id, email }
+    socket.user = decoded; // e.g., { id, email, ... }
     console.log("✅ Socket authenticated for user:", decoded.id);
     next();
   });
@@ -184,6 +201,11 @@ io.on("connection", (socket) => {
     if (!room || typeof room !== "string") {
       console.log("❌ No/invalid room provided for join-room");
       return;
+    }
+    // FIX: validate DM room format to prevent arbitrary leakage
+    if (isDmRoom(room) && !DM_ROOM_RE.test(room)) {
+      console.log(`❌ Invalid DM room format: ${room}`);
+      return socket.emit("error", "Invalid DM room.");
     }
     if (!userAllowedInRoom(socket.user.id, room)) {
       console.log(`❌ User ${socket.user.id} not allowed in room ${room}`);
@@ -203,6 +225,11 @@ io.on("connection", (socket) => {
     if (!room || !message?.trim()) {
       console.log("❌ Missing room or message");
       return;
+    }
+    // FIX: validate format + membership again on send
+    if (isDmRoom(room) && !DM_ROOM_RE.test(room)) {
+      console.log(`❌ Invalid DM room format on send: ${room}`);
+      return socket.emit("error", "Invalid DM room.");
     }
     if (!userAllowedInRoom(socket.user.id, room)) {
       console.log(`❌ User ${socket.user.id} not allowed to send in room ${room}`);
@@ -232,8 +259,7 @@ io.on("connection", (socket) => {
       };
 
       console.log(`📡 Broadcasting message to room ${room}`);
-      // Single emit (no extra echo)
-      io.to(room).emit("receive-message", messageData);
+      io.to(room).emit("receive-message", messageData); // single emit
     } catch (e) {
       console.error("❌ Failed to persist message:", e);
       socket.emit("error", "Failed to send message");
