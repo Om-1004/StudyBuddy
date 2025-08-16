@@ -30,7 +30,6 @@ async function resolveUserByUsername(username) {
   return data.user;
 }
 
-/* ---------------- component ---------------- */
 
 export default function DMChat() {
   const token = localStorage.getItem("accessToken") || getCookie("accessToken");

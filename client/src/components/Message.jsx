@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, Phone, Video, MoreHorizontal, Paperclip, Smile, Send } from 'lucide-react';
 
-// Mock data for conversations
 const mockConversations = [
   {
     id: '1',
@@ -35,7 +34,6 @@ const mockConversations = [
   }
 ];
 
-// Mock messages for active conversation
 const mockMessages = [
   {
     id: '1',
@@ -109,13 +107,10 @@ function MessagingApp() {
 
   return (
     <div className="h-screen bg-gray-100 flex">
-      {/* Sidebar */}
       <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
-        {/* Header */}
         <div className="p-6 border-b border-gray-200">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Messages</h1>
           
-          {/* Search */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <input
@@ -128,7 +123,6 @@ function MessagingApp() {
           </div>
         </div>
 
-        {/* Conversations List */}
         <div className="flex-1 overflow-y-auto">
           {filteredConversations.map((conversation) => (
             <div
@@ -171,9 +165,7 @@ function MessagingApp() {
         </div>
       </div>
 
-      {/* Main Chat Area */}
       <div className="flex-1 flex flex-col">
-        {/* Chat Header */}
         <div className="bg-white border-b border-gray-200 px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
@@ -208,7 +200,6 @@ function MessagingApp() {
           </div>
         </div>
 
-        {/* Messages */}
         <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50">
           {messages.map((message) => (
             <div key={message.id} className={`flex ${message.isOwn ? 'justify-end' : 'justify-start'}`}>
@@ -227,7 +218,6 @@ function MessagingApp() {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Message Input */}
         <div className="bg-white border-t border-gray-200 p-4">
           <div className="flex items-center space-x-3" onSubmit={handleSendMessage}>
             <button
