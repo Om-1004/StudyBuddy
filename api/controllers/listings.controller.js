@@ -14,7 +14,6 @@ export const filterUsers = async (req, res, next) => {
         }
 
         if (course) {
-             // Use $regex with $in to perform a case-insensitive partial match within the array
             query.courses = { $in: [new RegExp(course, 'i')] };
         }
 
