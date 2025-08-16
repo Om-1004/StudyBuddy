@@ -110,20 +110,13 @@ export default function LoginPage() {
               <span className="px-4 bg-[rgb(10,10,10)] text-gray-400">or</span>
             </div>
           </div>
-          <button
-            type="button"
-            // onClick={handleGoogleClick}
-            className="w-full bg-white text-black py-4 px-6 rounded-lg font-semibold text-lg hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black flex items-center justify-center gap-3"
-          >
-            <FcGoogle size={24} />
-            Sign in with Google
-          </button>
+          
         </div>
         <div className="text-center mt-8">
           <p className="text-[#a6a6a6]">
             Don't have an account?{" "}
             <button
-              onClick={() => navigate("/sigin")}
+              onClick={() => navigate("/signup")}
               className="text-[#57bfee] hover:text-[#4ab0e0] font-medium transition-colors"
             >
               Sign up here

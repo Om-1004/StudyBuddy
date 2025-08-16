@@ -1,146 +1,526 @@
 import React, { useState } from "react";
-import { FcGoogle } from "react-icons/fc";
-import { useNavigate } from "react-router-dom";
-import axios from 'axios';
+import { ChevronLeft, Plus, X } from "lucide-react";
+import api from "../axios/axios";
+import { useNavigate, Link } from "react-router-dom";
 
-// Create an axios instance for cleaner API calls
-const api = axios.create({
-  baseURL: "http://localhost:5000",
-  withCredentials: true, // This is important for sending cookies
-});
+const canadianUniversities = [
+  "Acadia University",
+  "Algoma University",
+  "Athabasca University",
+  "Bishop's University",
+  "Brandon University",
+  "Brock University",
+  "Cape Breton University",
+  "Carleton University",
+  "Canadian Mennonite University",
+  "Concordia University",
+  "Concordia University of Edmonton",
+  "Dalhousie University",
+  "École de technologie supérieure (ETS)",
+  "Emily Carr University of Art and Design",
+  "First Nations University of Canada",
+  "HEC Montréal",
+  "Kwantlen Polytechnic University",
+  "Lakehead University",
+  "Laurentian University",
+  "MacEwan University",
+  "McGill University",
+  "McMaster University",
+  "Memorial University of Newfoundland",
+  "Mount Allison University",
+  "Mount Royal University",
+  "Mount Saint Vincent University",
+  "Nipissing University",
+  "OCAD University",
+  "Polytechnique Montréal",
+  "Queen's University",
+  "Royal Roads University",
+  "Simon Fraser University",
+  "St. Francis Xavier University",
+  "St. Thomas University",
+  "Thompson Rivers University",
+  "Toronto Metropolitan University (TMU)",
+  "Trent University",
+  "Université de Montréal",
+  "Université de Moncton",
+  "Université de Sherbrooke",
+  "Université Laval",
+  "Université Sainte-Anne",
+  "University of Alberta",
+  "University of British Columbia",
+  "University of Guelph",
+  "University of Manitoba",
+  "University of New Brunswick",
+  "University of Northern British Columbia",
+  "University of Ottawa",
+  "University of Prince Edward Island",
+  "University of Regina",
+  "University of Saskatchewan",
+  "University of Toronto",
+  "University of Victoria",
+  "University of Waterloo",
+  "University of Winnipeg",
+  "Western University",
+  "Wilfrid Laurier University",
+  "York University"
+]
 
-export default function LoginPage() {
-  const navigate = useNavigate();
+
+const years = ["Freshman", "Sophomore", "Junior", "Senior"];
+const studyLocations = ["Coffee Shop", "Library", "Study Room", "Online"];
+
+export default function SignUpPage() {
+  const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState({
+    fullname: "",
+    username: "",
     email: "",
     password: "",
+    confirmPassword: "",
+    bio: "",
+    courses: [],
+    university: "",
+    otherUniversity: "",
+    major: "",
+    year: "",
+    location: "",
   });
 
+  const navigate = useNavigate();
+  const [currentCourse, setCurrentCourse] = useState("");
+
   const handleInputChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+
+    if (name === "university") {
+      setFormData((prev) => ({
+        ...prev,
+        university: value,
+        otherUniversity: value === "Other" ? prev.otherUniversity : "",
+      }));
+      return;
+    }
+
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    try {
-      // The payload to send to the backend
-      const payload = {
-        email: formData.email,
-        password: formData.password,
-      };
+  const addCourse = () => {
+    if (currentCourse.trim()) {
+      setFormData((prev) => ({
+        ...prev,
+        courses: [...prev.courses, currentCourse.trim()],
+      }));
+      setCurrentCourse("");
+    }
+  };
 
-      // Making the API call using the 'api' instance
-      const res = await api.post("/api/auth/signIn", payload);
+  const removeCourse = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      courses: prev.courses.filter((_, i) => i !== index),
+    }));
+  };
 
-      console.log(res.data);
-      // Navigate to the homepage on successful sign-in
-      navigate("/homepage");
+  const handleNext = () => setCurrentStep((s) => s + 1);
+  const handleBack = () => setCurrentStep((s) => s - 1);
 
-    } catch (error) {
-      console.error("Sign In Failed:", error?.response?.data || error.message);
-      // You can add more user-friendly error handling here, like a state for an error message
+  const handleSubmit = async () => {
+  const resolvedUniversity =
+    formData.university === "Other"
+      ? formData.otherUniversity.trim()
+      : formData.university;
+
+  const { otherUniversity, ...rest } = formData;
+  const payload = {
+    ...rest,
+    university: resolvedUniversity,
+    major: formData.major,     
+    year: formData.year,     
+    location: formData.location,
+  };
+
+  try {
+    const res = await api.post("/api/auth/signUp", payload);
+    console.log(res.data);
+    navigate("/homepage");
+  } catch (error) {
+    console.log("Sign Up Failed:", error?.response?.data || error.message);
+  }
+};
+
+
+  const isAccountStepValid = () => {
+    const basic =
+      formData.fullname.trim() &&
+      formData.username.trim() &&
+      formData.email.trim() &&
+      formData.password &&
+      formData.confirmPassword;
+      formData.major.trim() &&
+      formData.year &&
+      formData.location
+    const pwMatch = formData.password === formData.confirmPassword;
+    return Boolean(basic && pwMatch);
+  };
+
+  const isStepValid = () => {
+    switch (currentStep) {
+      case 0:
+        return isAccountStepValid();
+      case 1:
+        return formData.bio.trim().length > 0;
+      case 2:
+        return formData.courses.length > 0;
+      case 3:
+        if (!formData.university) return false;
+        if (formData.university === "Other" && !formData.otherUniversity.trim())
+          return false;
+        if (!formData.major.trim() || !formData.year || !formData.location)
+          return false;
+        return true;
+      default:
+        return false;
+    }
+  };
+
+  const renderStep = () => {
+    switch (currentStep) {
+      case 0:
+        return (
+          <div className="space-y-6">
+            {/* Account Info */}
+            <div>
+              <label className="block text-white text-sm font-medium mb-3">
+                Full Name
+              </label>
+              <input
+                type="text"
+                name="fullname"
+                value={formData.fullname}
+                onChange={handleInputChange}
+                placeholder="Your full name"
+                className="w-full px-4 py-4 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-colors"
+              />
+            </div>
+            <div>
+              <label className="block text-white text-sm font-medium mb-3">
+                Username
+              </label>
+              <input
+                type="text"
+                name="username"
+                value={formData.username}
+                onChange={handleInputChange}
+                placeholder="Your username"
+                className="w-full px-4 py-4 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-colors"
+              />
+            </div>
+            <div>
+              <label className="block text-white text-sm font-medium mb-3">
+                Email
+              </label>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                placeholder="your.email@domain.ca"
+                className="w-full px-4 py-4 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-colors"
+              />
+            </div>
+            <div>
+              <label className="block text-white text-sm font-medium mb-3">
+                Password
+              </label>
+              <input
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleInputChange}
+                placeholder="Enter your password"
+                className="w-full px-4 py-4 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-colors"
+              />
+            </div>
+            <div>
+              <label className="block text-white text-sm font-medium mb-3">
+                Confirm Password
+              </label>
+              <input
+                type="password"
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleInputChange}
+                placeholder="Confirm your password"
+                className="w-full px-4 py-4 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-colors"
+              />
+              {formData.confirmPassword &&
+                formData.password !== formData.confirmPassword && (
+                  <p className="text-red-400 text-sm mt-2">
+                    Passwords do not match.
+                  </p>
+                )}
+            </div>
+          </div>
+        );
+
+      case 1:
+        return (
+          <div className="space-y-6">
+            {/* Bio */}
+            <div>
+              <label className="block text-white text-sm font-medium mb-3">
+                Tell us about yourself
+              </label>
+              <textarea
+                name="bio"
+                value={formData.bio}
+                onChange={handleInputChange}
+                placeholder="Write a brief bio..."
+                rows={6}
+                className="w-full px-4 py-4 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-colors resize-none"
+              />
+            </div>
+          </div>
+        );
+
+      case 2:
+        return (
+          <div className="space-y-6">
+            {/* Courses */}
+            <h3 className="text-white text-lg font-medium mb-4">
+              What courses are you taking?
+            </h3>
+            {formData.courses.map((course, idx) => (
+              <div
+                key={idx}
+                className="flex items-center justify-between bg-gray-900 p-4 rounded-lg"
+              >
+                <p className="text-white">{course}</p>
+                <button
+                  onClick={() => removeCourse(idx)}
+                  className="text-red-400 hover:text-red-300 transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+            ))}
+            <div className="space-y-4 mt-4">
+              <input
+                type="text"
+                value={currentCourse}
+                onChange={(e) => setCurrentCourse(e.target.value)}
+                placeholder="Course name"
+                className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-colors"
+              />
+              <button
+                onClick={addCourse}
+                disabled={!currentCourse.trim()}
+                className="flex items-center gap-2 px-4 py-2 bg-cyan-400 text-black rounded-lg font-medium hover:bg-cyan-300 disabled:bg-gray-700 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
+              >
+                <Plus size={18} /> Add Course
+              </button>
+            </div>
+          </div>
+        );
+
+      case 3:
+  return (
+    <div className="space-y-6">
+      {/* University */}
+      <div>
+        <label htmlFor="university" className="block text-white text-sm font-medium mb-3">
+          University
+        </label>
+        <select
+          id="university"
+          name="university"
+          value={formData.university}
+          onChange={handleInputChange}
+          className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-colors"
+          required
+        >
+          <option value="">Select your university</option>
+          {canadianUniversities.map((u) => (
+            <option key={u} value={u}>{u}</option>
+          ))}
+          <option value="Other">Other</option>
+        </select>
+        {formData.university === "Other" && (
+          <input
+            type="text"
+            name="otherUniversity"
+            value={formData.otherUniversity}
+            onChange={handleInputChange}
+            placeholder="Type your university"
+            className="mt-2 w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white"
+          />
+        )}
+      </div>
+
+      {/* Major */}
+      <div>
+        <label htmlFor="major" className="block text-white text-sm font-medium mb-2">
+          Major
+        </label>
+        <input
+          type="text"
+          id="major"
+          name="major"
+          value={formData.major}
+          onChange={handleInputChange}
+          placeholder="e.g., Computer Engineering"
+          className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white"
+          required
+        />
+      </div>
+
+      {/* Year */}
+      <div>
+        <label htmlFor="year" className="block text-white text-sm font-medium mb-2">
+          Year
+        </label>
+        <select
+          id="year"
+          name="year"
+          value={formData.year}
+          onChange={handleInputChange}
+          className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white"
+        >
+          <option value="">Select year</option>
+          <option value="Freshman">Freshman</option>
+          <option value="Sophomore">Sophomore</option>
+          <option value="Junior">Junior</option>
+          <option value="Senior">Senior</option>
+        </select>
+      </div>
+
+      {/* Study Location */}
+      <div>
+        <label htmlFor="location" className="block text-white text-sm font-medium mb-2">
+          Study Location
+        </label>
+        <select
+          id="location"
+          name="location"
+          value={formData.location}
+          onChange={handleInputChange}
+          className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white"
+          required
+        >
+          <option value="">Select location</option>
+          <option value="Coffee Shop">Coffee Shop</option>
+          <option value="Library">Library</option>
+          <option value="Study Room">Study Room</option>
+          <option value="Online">Online</option>
+        </select>
+      </div>
+    </div>
+  );
+
+
+      default:
+        return null;
+    }
+  };
+
+  const getStepTitle = () => {
+    switch (currentStep) {
+      case 0:
+        return "Create your account";
+      case 1:
+        return "Tell us about yourself";
+      case 2:
+        return "Courses you’re taking";
+      case 3:
+        return "Your university & study info";
+      default:
+        return "";
+    }
+  };
+
+  const getStepDescription = () => {
+    switch (currentStep) {
+      case 0:
+        return "Create your TMU TutorConnect account";
+      case 1:
+        return "Help others get to know you better";
+      case 2:
+        return "List the courses you’re currently taking";
+      case 3:
+        return "Add your university, major, year, and preferred study location";
+      default:
+        return "";
     }
   };
 
   return (
-    <div className="min-h-screen bg-[rgb(3,3,3)] flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-md bg-[rgb(10,10,10)] rounded-md border border-[rgb(10,10,10)] py-7 px-6">
+    <div className="min-h-screen bg-black flex items-center justify-center px-4 py-8">
+      <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-[#57bfee] mb-2">
-            Welcome Back
+          <div className="flex items-center justify-between mb-4">
+            {currentStep > 0 && (
+              <button
+                onClick={handleBack}
+                className="text-cyan-400 hover:text-cyan-300 transition-colors"
+              >
+                <ChevronLeft size={24} />
+              </button>
+            )}
+            <div className="flex-1" />
+            <div className="text-gray-400 text-sm">Step {currentStep + 1} of 4</div>
+          </div>
+          <h1 className="text-3xl md:text-4xl font-bold text-cyan-400 mb-2">
+            {getStepTitle()}
           </h1>
-          <p className="text-sm text-[#a6a6a6]">
-            Sign in to your TutorConnect account
-          </p>
+          <p className="text-gray-300 text-base md:text-lg">{getStepDescription()}</p>
         </div>
-        <div className="space-y-6">
-          <div>
-            <label
-              htmlFor="email"
-              className="block text-white text-sm font-semibold mb-3"
-            >
-              Email
-            </label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleInputChange}
-              placeholder="your.email@gmail.com"
-              className="w-full px-4 py-4 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#57bfee] focus:border-transparent transition-colors"
-              required
+
+        <div className="mb-8">
+          <div className="bg-gray-800 rounded-full h-2">
+            <div
+              className="bg-cyan-400 h-2 rounded-full transition-all duration-300 ease-out"
+              style={{ width: `${((currentStep + 1) / 4) * 100}%` }}
             />
           </div>
-          <div>
-            <label
-              htmlFor="password"
-              className="block text-white text-sm font-semibold mb-3"
-            >
-              Password
-            </label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={formData.password}
-              onChange={handleInputChange}
-              placeholder="Enter your password"
-              className="w-full px-4 py-4 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#57bfee] focus:border-transparent transition-colors"
-              required
-            />
-          </div>
-          <button
-            onClick={handleSubmit}
-            className="w-full bg-[#57bfee] text-black py-4 px-6 rounded-lg font-semibold text-lg hover:bg-[#4ab0e0] transition-colors focus:outline-none focus:ring-2 focus:ring-[#57bfee] focus:ring-offset-2 focus:ring-offset-black"
-          >
-            Sign In
-          </button>
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-700"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-[rgb(10,10,10)] text-gray-400">or</span>
-            </div>
-          </div>
-          <button
-            type="button"
-            // onClick={handleGoogleClick}
-            className="w-full bg-white text-black py-4 px-6 rounded-lg font-semibold text-lg hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black flex items-center justify-center gap-3"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="feather feather-google"
-            >
-              <path d="M22 12h-1c0-4.97-4.03-9-9-9-4.97 0-9 4.03-9 9s4.03 9 9 9c3.96 0 7.37-2.58 8.5-6h-1.5c-1.12 2.05-3.32 3.5-7 3.5-3.87 0-7-3.13-7-7s3.13-7 7-7c3.87 0 7 3.13 7 7v1h-1"></path>
-            </svg>
-            Sign in with Google
-          </button>
         </div>
-        <div className="text-center mt-8">
-          <p className="text-[#a6a6a6]">
-            Don't have an account?{" "}
+
+        {renderStep()}
+
+        <div className="mt-8">
+          {currentStep < 3 ? (
             <button
-              onClick={() => navigate("/sigin")}
-              className="text-[#57bfee] hover:text-[#4ab0e0] font-medium transition-colors"
+              type="button"
+              onClick={handleNext}
+              disabled={!isStepValid()}
+              className="w-full bg-cyan-400 text-black py-4 px-6 rounded-lg font-semibold text-lg hover:bg-cyan-300 disabled:bg-gray-700 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
             >
-              Sign up here
+              Next
             </button>
-          </p>
+          ) : (
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={!isStepValid()}
+              className="w-full bg-cyan-400 text-black py-4 px-6 rounded-lg font-semibold text-lg hover:bg-cyan-300 disabled:bg-gray-700 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
+            >
+              Complete Registration
+            </button>
+          )}
         </div>
+
+        {currentStep === 0 && (
+          <div className="text-center mt-8">
+            <p className="text-gray-300">
+              Already have an account?{" "}
+              <Link
+                to="/signin"
+                className="text-cyan-400 hover:text-cyan-300 font-medium transition-colors"
+              >
+                Sign in here
+              </Link>
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
