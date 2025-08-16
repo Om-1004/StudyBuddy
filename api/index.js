@@ -28,7 +28,7 @@ app.use(
 
 app.use(express.json());
 app.use("/api/auth", authRouter);
-app.use("/api/tutor", tutorRouter);
+// app.use("/api/tutor", tutorRouter);
 
 app.listen(3000, () => {
   console.log("Server listening on port: 3000");

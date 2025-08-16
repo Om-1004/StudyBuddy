@@ -23,9 +23,8 @@ export default function SignUpTutor() {
   e.preventDefault();
 
   try {
-    // Gather tutor-specific info from form state
     const tutorData = {
-      courses: formData.courses,   // make sure formData has courses as an array or comma-separated string
+      courses: formData.courses,  
       bio: formData.bio,
       location: formData.location,
     };
