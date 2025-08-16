@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import Navbar from '../components/Navbar';
+import { useNavigate } from 'react-router-dom';
 
 const BuddyList = ({ buddies = [] }) => {
+  const navigate = useNavigate();
   return (
     <div className="mt-8">
       {buddies.length > 0 ? (
@@ -45,7 +48,7 @@ const BuddyList = ({ buddies = [] }) => {
               </div>
 
               <div className="text-center mt-auto">
-                <button className="bg-indigo-500 text-white font-semibold py-3 px-6 rounded-lg w-full hover:bg-indigo-600 transition-colors duration-200">
+                <button className="bg-indigo-500 text-white font-semibold py-3 px-6 rounded-lg w-full hover:bg-indigo-600 transition-colors duration-200" onClick={() => navigate("/chat")}>
                   Connect for Study Session
                 </button>
               </div>

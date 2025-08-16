@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+
 import { FcGoogle } from "react-icons/fc";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -30,6 +31,7 @@ export default function LoginPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(payload),
+        credentials: 'include', // This is the crucial line to add
       });
 
       const data = await res.json();
@@ -40,7 +42,7 @@ export default function LoginPage() {
 
       console.log(data);
       // Navigate to the homepage on successful sign-in
-      navigate("/homepage");
+      navigate("/");
 
     } catch (error) {
       console.error("Sign In Failed:", error.message);
