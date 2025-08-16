@@ -1,10 +1,15 @@
 import mongoose from "mongoose"
 
 const userSchema = new mongoose.Schema({
+    fullname: {
+        type: String, 
+        required: true,
+        unqiue: true,
+    },
     username: {
         type: String, 
         required: true,
-        unqieu: true,
+        unqiue: true,
     },
     email: {
         type: String, 
@@ -15,10 +20,17 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    role: { 
-        type: String, 
-        enum: ['student','tutor'], 
-        required: true 
+    bio: {
+        type: String,
+        required: true,
+    },
+    courses: [{
+        type: String,
+        required: true,
+    }],
+    university: {
+        type: String,
+        required: true,
     },
     avatar:{
         type: String,
