@@ -36,7 +36,7 @@ export default function HomePage() {
           <BookOpen className="w-10 h-5 text-black" />
           <p className="text-black text-sm"> Create Profile </p>
         </button>
-        <div className="mx-auto space-y-8">
+        <div className="flex flex-wrap justify-center gap-8 mt-10">
           {propArray.map((item, index) => 
             <HomeCard 
               key={index}
