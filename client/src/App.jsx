@@ -12,10 +12,13 @@ export default function App() {
   <Routes>
     <Route path='/homepage' element={<HomePage /> } />
     <Route path='/signup' element= {<SignUpPage />} />
+<<<<<<<<< Temporary merge branch 1
     <Route path='/listings' element={<Listings />} />
     <Route path='/signin' element={<SignInPage />} />
+=========
     <Route path='/login' element= {<LoginPage />} />
     <Route path='/browse' element= {<BrowsePage />} />
+>>>>>>>>> Temporary merge branch 2
   </Routes>
   
   </BrowserRouter>
