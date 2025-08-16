@@ -16,9 +16,36 @@ export default function LoginPage() {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Login attempted with:", formData);
+    
+    try {
+      const payload = {
+        email: formData.email,
+        password: formData.password,
+      };
+      const res = await fetch("http://localhost:3000/api/auth/signin", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Sign In Failed");
+      }
+
+      console.log(data);
+      // Navigate to the homepage on successful sign-in
+      navigate("/homepage");
+
+    } catch (error) {
+      console.error("Sign In Failed:", error.message);
+      // You can add more user-friendly error handling here, like a state for an error message
+    }
   };
 
   return (
@@ -83,20 +110,13 @@ export default function LoginPage() {
               <span className="px-4 bg-[rgb(10,10,10)] text-gray-400">or</span>
             </div>
           </div>
-          <button
-            type="button"
-            // onClick={handleGoogleClick}
-            className="w-full bg-white text-black py-4 px-6 rounded-lg font-semibold text-lg hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black flex items-center justify-center gap-3"
-          >
-            <FcGoogle size={24} />
-            Sign in with Google
-          </button>
+          
         </div>
         <div className="text-center mt-8">
           <p className="text-[#a6a6a6]">
             Don't have an account?{" "}
             <button
-              onClick={() => navigate("/sigin")}
+              onClick={() => navigate("/signup")}
               className="text-[#57bfee] hover:text-[#4ab0e0] font-medium transition-colors"
             >
               Sign up here

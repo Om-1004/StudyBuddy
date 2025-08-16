@@ -66,6 +66,7 @@ export default function Listings() {
   const [sidebardata, setSidebardata] = useState({
     searchTerm: '',
     course: '',
+    university: '',
     year: 'All years',
     location: 'Any location',
   });
@@ -74,6 +75,26 @@ export default function Listings() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const canadianUniversities = [
+    "Acadia University", "Algoma University", "Athabasca University", "Bishop's University", 
+    "Brandon University", "Brock University", "Cape Breton University", "Carleton University", 
+    "Canadian Mennonite University", "Concordia University", "Concordia University of Edmonton", 
+    "Dalhousie University", "École de technologie supérieure (ETS)", "Emily Carr University of Art and Design", 
+    "First Nations University of Canada", "HEC Montréal", "Kwantlen Polytechnic University", 
+    "Lakehead University", "Laurentian University", "MacEwan University", "McGill University", 
+    "McMaster University", "Memorial University of Newfoundland", "Mount Allison University", 
+    "Mount Royal University", "Mount Saint Vincent University", "Nipissing University", 
+    "OCAD University", "Polytechnique Montréal", "Queen's University", "Royal Roads University", 
+    "Simon Fraser University", "St. Francis Xavier University", "St. Thomas University", 
+    "Thompson Rivers University", "Toronto Metropolitan University (TMU)", "Trent University", 
+    "Université de Montréal", "Université de Moncton", "Université de Sherbrooke", 
+    "Université Laval", "Université Sainte-Anne", "University of Alberta", "University of British Columbia", 
+    "University of Guelph", "University of Manitoba", "University of New Brunswick", 
+    "University of Northern British Columbia", "University of Ottawa", "University of Prince Edward Island", 
+    "University of Regina", "University of Saskatchewan", "University of Toronto", 
+    "University of Victoria", "University of Waterloo", "University of Winnipeg", 
+    "Western University", "Wilfrid Laurier University", "York University"
+  ];
   const years = ['All years', 'Freshman', 'Sophomore', 'Junior', 'Senior'];
   const studyLocations = ["Any location", "Coffee Shop", "Library", "Study Room", "Online"];
 
@@ -86,6 +107,7 @@ export default function Listings() {
         const url = new URL('http://localhost:3000/api/listings/getListings');
         url.searchParams.append('searchTerm', sidebardata.searchTerm);
         url.searchParams.append('course', sidebardata.course);
+        url.searchParams.append('university', sidebardata.university);
         url.searchParams.append('year', sidebardata.year === 'All years' ? '' : sidebardata.year);
         url.searchParams.append('location', sidebardata.location === 'Any location' ? '' : sidebardata.location);
         
@@ -108,6 +130,7 @@ export default function Listings() {
 
     fetchBuddies();
   }, [sidebardata]); 
+  
   const handleChange = (e) => {
     setSidebardata({ ...sidebardata, [e.target.id]: e.target.value });
   };
@@ -148,7 +171,7 @@ export default function Listings() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
 
               <div className="relative">
                 <input
@@ -159,6 +182,23 @@ export default function Listings() {
                   onChange={handleChange}
                   className="block w-full py-2 px-4 border border-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors duration-200"
                 />
+              </div>
+
+              <div className="relative">
+                <select
+                  id="university"
+                  value={sidebardata.university}
+                  onChange={handleChange}
+                  className="block w-full py-2 px-4 border border-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors duration-200"
+                >
+                  <option value="">All universities</option>
+                  {canadianUniversities.map(university => (
+                    <option key={university} value={university}>{university}</option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                  <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                </div>
               </div>
 
               <div className="relative">
