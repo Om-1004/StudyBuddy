@@ -3,7 +3,6 @@ import React from 'react'
 import HomeCard from '../components/HomeCard.jsx'
 import Navbar from '../components/Navbar.jsx'
 import Listings from '../pages/Listings.jsx';
-import SearchBar from '../components/SearchBar.jsx';
 import { Link } from 'react-router-dom'
 import { UsersRound , BookOpen , GraduationCap } from "lucide-react";
 
@@ -71,9 +70,7 @@ export default function HomePage() {
         </div>
         < Listings />
       </div>
-      
-      <SearchBar/>
-      
+    
     </div>
   );
 }
