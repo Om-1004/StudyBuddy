@@ -1,9 +1,12 @@
-import React from 'react';
-import HomeCard from '../components/HomeCard.jsx';
-import Navbar from '../components/Navbar.jsx';
-import SearchBar from '../components/SearchBar.jsx';
 
-import { UsersRound, BookOpen, GraduationCap } from "lucide-react";
+import React from 'react'
+import HomeCard from '../components/HomeCard.jsx'
+import Navbar from '../components/Navbar.jsx'
+import Listings from '../pages/Listings.jsx';
+import SearchBar from '../components/SearchBar.jsx';
+import { Link } from 'react-router-dom'
+import { UsersRound , BookOpen , GraduationCap } from "lucide-react";
+
 
 export default function HomePage() {
   const propArray = [
@@ -38,7 +41,6 @@ export default function HomePage() {
 
   return (
     <div>
-      <Navbar />
 
       <div className="flex flex-col space-y-8 border text-center bg-[#F0F0FA] pb-20">
         
@@ -46,28 +48,18 @@ export default function HomePage() {
           <GraduationCap className="w-16 h-16 text-white"/>
         </div>
 
-        <h1 className="text-4xl md:text-7xl font-semibold text-black mt-8">
-          Find Your Perfect <br />
-          <span className="text-[#8C77E8] font-bold">Study Buddy</span>
-        </h1>
-
-        <p className="text-base md:text-lg text-[#7C7E9E] max-w-2xl mx-auto">
-          Connect with fellow students in your courses. Study together, share knowledge, and achieve academic success as a team.
-        </p>
-
-        <div className="flex flex-col md:flex-row md:justify-center gap-5 md:gap-7 mx-auto">
-          <button className="flex items-center justify-center bg-[#8786F4] rounded-md w-60 px-4 py-2 gap-2 hover:bg-[#7C89FF] cursor-pointer">
-            <UsersRound className="w-6 h-6 text-white" /> 
-            <span className="text-white text-sm font-medium">Browse Study Buddies</span>
-          </button>
-
-          <button className="flex items-center justify-center bg-[#FAFAFF] rounded-md w-60 px-6 py-2 border-2 border-[#DFDEEC] gap-2 hover:bg-[#E8E6FF] cursor-pointer">
-            <BookOpen className="w-6 h-6 text-black" />
-            <span className="text-black text-sm font-medium">Create Profile</span>
-          </button>
-        </div>
-
-        <div className="flex flex-wrap justify-center gap-8 pt-12">
+        <h1 className="text-black-100 text-5xl"> Find Your Perfect <p className="text-[#8C77E8] font-bold"> Study Buddy </p> </h1>
+        <p className="text-[#7C7E9E] text-1xl"> Connect with fellow students in your courses. Study together, share 
+          knowledge, and achieve academic success as a team </p>
+        <Link to="/listings" className="flex justify-content items-center bg-[#8786F4] rounded-md w-60 px-4 py-2 mx-auto">
+          <UsersRound className="w-10 h-5 text-white" />
+          <p className="text-white text-sm"> Browse Study Buddies </p>
+        </Link>
+        <button className="flex justify-content items-center bg-[#FAFAFF] rounded-md w-55 px-8 py-2 mx-auto border-2 border-[#DFDEEC]"> 
+          <BookOpen className="w-10 h-5 text-black" />
+          <p className="text-black text-sm"> Create Profile </p>
+        </button>
+        <div className="flex flex-wrap justify-center gap-8 mt-10">
           {propArray.map((item, index) => (
             <HomeCard 
               key={index}
@@ -77,9 +69,12 @@ export default function HomePage() {
             />
           ))}
         </div>
+        < Listings />
       </div>
+      
       <SearchBar/>
       
     </div>
   );
 }
+
