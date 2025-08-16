@@ -16,9 +16,36 @@ export default function LoginPage() {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Login attempted with:", formData);
+    
+    try {
+      const payload = {
+        email: formData.email,
+        password: formData.password,
+      };
+      const res = await fetch("http://localhost:3000/api/auth/signin", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Sign In Failed");
+      }
+
+      console.log(data);
+      // Navigate to the homepage on successful sign-in
+      navigate("/homepage");
+
+    } catch (error) {
+      console.error("Sign In Failed:", error.message);
+      // You can add more user-friendly error handling here, like a state for an error message
+    }
   };
 
   return (
