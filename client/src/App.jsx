@@ -1,7 +1,15 @@
+import SignUpPage from "./pages/SignUpPage.jsx";
+import HomePage from "./components/HomePage.jsx"
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+
+
 export default function App() {
-  return (
-    <h1 className="text-3xl font-bold underline">
-      Hello world!w
-    </h1>
-  )
+  return <BrowserRouter>
+  <Routes>
+    <Route path='/homepage' element={<HomePage /> } />
+    <Route path='/signup' element= {<SignUpPage />} />
+  </Routes>
+  
+  </BrowserRouter>
+
 }
