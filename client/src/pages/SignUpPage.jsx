@@ -65,10 +65,10 @@ const canadianUniversities = [
   "Wilfrid Laurier University",
   "York University",
 ];
+< BrowsePage
 const years = ["Freshman", "Sophomore", "Junior", "Senior"];
 const studyLocations = ["Coffee Shop", "Library", "Study Room", "Online"];
 
-// ---- Reusable Input Component ----
 const InputField = ({ label, type = "text", name, value, onChange, placeholder }) => (
   <div>
     <label className="block text-gray-500 text-sm font-medium mb-2">{label}</label>
