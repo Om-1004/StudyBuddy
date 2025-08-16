@@ -1,7 +1,7 @@
-// DMChat.jsx
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { io } from "socket.io-client";
 import { Search, Paperclip, Smile, Send, Plus } from "lucide-react";
+import { BrowserRouter, Link, NavLink, useLocation } from "react-router-dom";
 
 /* ---------------- helpers ---------------- */
 function getCookie(name) {
@@ -23,6 +23,7 @@ async function resolveUserByUsername(username) {
   );
   if (!res.ok) throw new Error("User not found");
   const data = await res.json();
+  // Ensure the fullname is retrieved from the backend
   if (!data?.user?.id) throw new Error("Invalid user payload");
   return data.user;
 }
@@ -240,6 +241,7 @@ export default function DMChat() {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return true;
     return (
+      c.other?.fullname?.toLowerCase()?.includes(q) ||
       c.other?.username?.toLowerCase()?.includes(q) ||
       c.other?.id?.toLowerCase?.()?.includes(q)
     );
@@ -326,7 +328,7 @@ export default function DMChat() {
                 }`}
               >
                 <div className="font-semibold text-gray-900 truncate">
-                  {conv.other?.username || conv.other?.id}
+                  {conv.other?.fullname || conv.other?.username || conv.other?.id}
                 </div>
                 <div className="text-xs text-gray-500 truncate">
                   {conv.lastMessage
@@ -351,7 +353,7 @@ export default function DMChat() {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="font-semibold text-gray-900">
-                {activePeer?.username || activePeer?.id || "No conversation selected"}
+                {activePeer?.fullname || activePeer?.username || activePeer?.id || "No conversation selected"}
               </h2>
               <p className="text-sm text-gray-500">
                 {activeRoom ? "Direct Message" : "Create or open a conversation"}
