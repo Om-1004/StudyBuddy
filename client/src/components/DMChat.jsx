@@ -1,7 +1,52 @@
+// DMChat.jsx (with detailed console logs for user/conversation/message info)
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { io } from "socket.io-client";
 import { Search, Paperclip, Smile, Send, Plus } from "lucide-react";
-import { BrowserRouter, Link, NavLink, useLocation } from "react-router-dom";
+
+/* ---------------- debug helpers ---------------- */
+const DEBUG = true;
+const debug = (...args) => DEBUG && console.log("[DMChat]", ...args);
+const group = (label) => DEBUG && console.group(label);
+const groupEnd = () => DEBUG && console.groupEnd();
+const table = (rows) => DEBUG && console.table(rows);
+
+function maskToken(t) {
+  if (!t) return null;
+  const s = String(t);
+  if (s.length <= 12) return s.replace(/./g, "•");
+  return `${s.slice(0, 6)}…${s.slice(-6)} (${s.length} chars)`;
+}
+
+function logUser(label, u) {
+  if (!DEBUG) return;
+  if (!u) {
+    console.log(`[DMChat] ${label}: null/undefined`);
+    return;
+  }
+  const summary = {
+    id: u.id,
+    email: u.email,
+    username: u.username,
+    fullname: u.fullname,
+  };
+  console.log(`[DMChat] ${label}:`, summary);
+}
+
+function logConvList(convs, label = "Conversations") {
+  if (!DEBUG) return;
+  group(`📚 ${label} (${convs.length})`);
+  table(
+    convs.map((c) => ({
+      room: c.room,
+      other_id: c.other?.id,
+      other_username: c.other?.username,
+      other_fullname: c.other?.fullname,
+      lastMessageAt: c.lastMessageAt,
+      lastMessage: c.lastMessage?.slice?.(0, 60),
+    }))
+  );
+  groupEnd();
+}
 
 /* ---------------- helpers ---------------- */
 function getCookie(name) {
@@ -11,54 +56,83 @@ function getCookie(name) {
   return null;
 }
 
+function cleanToken(raw) {
+  const t = (raw || "").trim();
+  return t && t !== "undefined" && t !== "null" ? t : null;
+}
+
+function displayName(other) {
+  const n1 = (other?.fullname || "").trim();
+  const n2 = (other?.username || "").trim();
+  const idTail = other?.id ? String(other.id).slice(-4) : "unknown";
+  return n1 || n2 || `User (${idTail})`;
+}
+
 function makeDmRoom(myId, otherId) {
   const [a, b] = [String(myId), String(otherId)].sort();
   return `dm:${a}|${b}`;
 }
 
+function parseDmRoom(room) {
+  const m = /^dm:([^|]+)\|([^|]+)$/.exec(room || "");
+  if (!m) return [null, null];
+  return [m[1], m[2]];
+}
+
 async function resolveUserByUsername(username) {
+  debug("🔍 Resolving user by username:", username);
   const res = await fetch(
     `http://localhost:3000/api/users/lookup?username=${encodeURIComponent(username)}`,
     { credentials: "include" }
   );
   if (!res.ok) throw new Error("User not found");
   const data = await res.json();
-  // Ensure the fullname is retrieved from the backend
+  logUser("Resolved user", data?.user);
   if (!data?.user?.id) throw new Error("Invalid user payload");
-  return data.user;
+  return data.user; // { id, username, fullname? }
 }
 
 async function loadConversations() {
+  debug("📚 Fetching conversations from server…");
   const res = await fetch("http://localhost:3000/api/conversations", {
     credentials: "include",
   });
   if (!res.ok) throw new Error("Failed to load conversations");
   const data = await res.json();
+  logConvList(data.conversations || [], "Loaded Conversations");
   return data.conversations || [];
 }
 
 /* ---------------- component ---------------- */
 export default function DMChat() {
-  const token = localStorage.getItem("accessToken") || getCookie("accessToken");
+  // token diagnostics
+  const lsTokenRaw = localStorage.getItem("accessToken");
+  const cookieTokenRaw = getCookie("accessToken");
+  debug("🔑 Tokens -> localStorage:", maskToken(lsTokenRaw), "cookie:", maskToken(cookieTokenRaw));
+
+  const token = cleanToken(lsTokenRaw || cookieTokenRaw);
+  const hasToken = Boolean(token);
+
   const [me, setMe] = useState(null);
 
-  // socket
+  // socket (create once per token)
   const socket = useMemo(() => {
-    if (!token) {
-      console.log("❌ No token found, cannot create socket");
+    if (!hasToken) {
+      debug("❌ No token found, not creating socket");
       return null;
     }
-    console.log("🔌 Creating socket connection with token");
+    debug("🔌 Creating socket connection", token ? "with token" : "(no token)");
     return io("http://localhost:3000", {
       withCredentials: true,
-      auth: { token },
+      auth: token ? { token } : undefined,
     });
-  }, [token]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasToken, token]);
 
   // ui state
   const [isCreating, setIsCreating] = useState(false);
   const [newUsername, setNewUsername] = useState("");
-  const [conversations, setConversations] = useState([]);
+  const [conversations, setConversations] = useState([]); // [{ room, other, lastMessage, lastMessageAt }]
   const [activeRoom, setActiveRoom] = useState("");
   const [activePeer, setActivePeer] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -71,7 +145,7 @@ export default function DMChat() {
   const scrollToBottom = () =>
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
 
-  // keep latest activeRoom accessible inside stable listener
+  // latest activeRoom for stable listener
   const activeRoomRef = useRef("");
   useEffect(() => {
     activeRoomRef.current = activeRoom;
@@ -82,60 +156,105 @@ export default function DMChat() {
 
   /* ------- bootstrap me & conversations ------- */
   useEffect(() => {
-    if (!token) return;
+    if (!hasToken) return;
     (async () => {
       try {
-        console.log("👤 Fetching user info...");
+        debug("👤 Fetching /api/me …");
         const res = await fetch("http://localhost:3000/api/me", {
           credentials: "include",
         });
+        if (!res.ok) throw new Error("unauthorized");
         const data = await res.json();
         setMe(data.user);
+        logUser("Me (/api/me)", data.user);
 
         setLoadingConversations(true);
         const convs = await loadConversations();
         setConversations(convs);
       } catch (e) {
-        console.error("❌ Failed to bootstrap messaging:", e);
+        console.error("[DMChat] ❌ Failed to bootstrap messaging:", e);
       } finally {
         setLoadingConversations(false);
       }
     })();
-  }, [token]);
+  }, [hasToken]);
+
+  // log whenever "me" changes
+  useEffect(() => {
+    if (me) logUser("Me (state change)", me);
+  }, [me]);
+
+  // log whenever activePeer changes
+  useEffect(() => {
+    if (activePeer) logUser("Active peer", activePeer);
+  }, [activePeer]);
 
   /* ------- stable socket listeners (no stacking) ------- */
   useEffect(() => {
     if (!socket) return;
 
     const onConnect = () => {
-      console.log("✅ Socket connected:", socket.id);
+      debug("✅ Socket connected:", socket.id);
+      // re-join active room across reconnects
+      if (activeRoomRef.current) {
+        debug("🏠 Re-joining room after connect:", activeRoomRef.current);
+        socket.emit("join-room", activeRoomRef.current);
+      }
     };
 
     const onReceive = (data) => {
-      console.log("📨 receive-message:", data);
+      debug("📨 receive-message:", {
+        _id: data?._id,
+        room: data?.room,
+        sender: data?.sender,
+        createdAt: data?.createdAt,
+        preview: data?.message?.slice?.(0, 80),
+      });
 
-      // drop duplicates (can happen if server and client both send quickly or listener was stacked before)
-      if (data?._id && seenIdsRef.current.has(data._id)) return;
+      // drop duplicates
+      if (data?._id && seenIdsRef.current.has(data._id)) {
+        debug("↩️  Dropped duplicate message:", data._id);
+        return;
+      }
       if (data?._id) seenIdsRef.current.add(data._id);
 
       if (data?.room === activeRoomRef.current) {
         setMessages((prev) => [...prev, data]);
         setTimeout(scrollToBottom, 50);
       } else {
-        // update preview for other rooms
-        setConversations((prev) =>
-          prev.map((c) =>
-            c.room === data.room
-              ? { ...c, lastMessage: data.message, lastMessageAt: data.createdAt }
-              : c
-          )
-        );
+        // ensure the conversation exists / update previews
+        setConversations((prev) => {
+          const idx = prev.findIndex((c) => c.room === data.room);
+          if (idx >= 0) {
+            const updated = [...prev];
+            updated[idx] = {
+              ...updated[idx],
+              lastMessage: data.message,
+              lastMessageAt: data.createdAt,
+            };
+            return updated;
+          }
+          const [u1, u2] = parseDmRoom(data.room);
+          const myId = me?.id;
+          const otherId = myId === u1 ? u2 : u1;
+          const next = [
+            {
+              room: data.room,
+              other: { id: otherId, username: `User ${String(otherId).slice(-4)}` },
+              lastMessage: data.message,
+              lastMessageAt: data.createdAt,
+            },
+            ...prev,
+          ];
+          logConvList(next, "Conversations (after unseen message)");
+          return next;
+        });
       }
     };
 
     const onConnectError = (err) =>
-      console.error("❌ Socket connect_error:", err?.message || err);
-    const onError = (error) => console.error("❌ Socket error:", error);
+      console.error("[DMChat] ❌ Socket connect_error:", err?.message || err);
+    const onError = (error) => console.error("[DMChat] ❌ Socket error:", error);
 
     socket.on("connect", onConnect);
     // prevent stacking: always remove then add
@@ -149,13 +268,25 @@ export default function DMChat() {
       socket.off("receive-message", onReceive);
       socket.off("connect_error", onConnectError);
       socket.off("error", onError);
-      // do NOT disconnect unless unmounting the whole chat component
+    };
+  }, [socket, me]);
+
+  // disconnect socket on unmount
+  useEffect(() => {
+    return () => {
+      if (socket) {
+        try {
+          debug("🔌 Disconnecting socket");
+          socket.disconnect();
+        } catch {}
+      }
     };
   }, [socket]);
 
   // join whenever activeRoom changes, and reset room-local deduper
   useEffect(() => {
     if (socket && activeRoom) {
+      debug("🏠 Joining room:", activeRoom);
       socket.emit("join-room", activeRoom);
     }
     seenIdsRef.current.clear();
@@ -165,21 +296,36 @@ export default function DMChat() {
     scrollToBottom();
   }, [messages]);
 
+  // log search query changes
+  useEffect(() => {
+    if (searchQuery) debug("🔎 Search query:", searchQuery);
+  }, [searchQuery]);
+
   /* ------- actions ------- */
   const startConversation = async (e) => {
     e?.preventDefault?.();
-    if (!socket || !me) return;
+    if (!socket || !me) {
+      debug("❌ Cannot start: no socket or me", { hasSocket: !!socket, me });
+      return;
+    }
 
     const username = newUsername.trim();
-    if (!username) return;
+    if (!username) {
+      debug("❌ No username provided");
+      return;
+    }
 
     try {
-      const other = await resolveUserByUsername(username);
+      const other = await resolveUserByUsername(username); // { id, username, fullname? }
       const room = makeDmRoom(me.id, other.id);
+      debug("🧵 Starting conversation", { me: me.id, other: other.id, room });
 
-      setConversations((prev) =>
-        prev.some((c) => c.room === room) ? prev : [{ room, other }, ...prev]
-      );
+      setConversations((prev) => {
+        const exists = prev.some((c) => c.room === room);
+        const next = exists ? prev : [{ room, other }, ...prev];
+        logConvList(next, "Conversations (after start)");
+        return next;
+      });
 
       setActiveRoom(room);
       setActivePeer(other);
@@ -187,11 +333,13 @@ export default function DMChat() {
       socket.emit("join-room", room);
 
       // load history and prefill deduper
+      debug("📚 Fetching history for", room);
       const res = await fetch(
         `http://localhost:3000/api/messages/${encodeURIComponent(room)}`,
         { credentials: "include" }
       );
       const history = res.ok ? await res.json() : [];
+      debug("📚 History loaded:", history.length);
       seenIdsRef.current.clear();
       history.forEach((m) => m?._id && seenIdsRef.current.add(m._id));
       setMessages(history);
@@ -199,39 +347,57 @@ export default function DMChat() {
       setIsCreating(false);
       setNewUsername("");
     } catch (err) {
-      console.error("❌ Failed to start conversation:", err);
+      console.error("[DMChat] ❌ Failed to start conversation:", err);
       alert(err.message || "Failed to start conversation");
     }
   };
 
   const openConversation = async (conv) => {
-    if (!socket) return;
+    if (!socket) {
+      debug("❌ No socket in openConversation");
+      return;
+    }
+    debug("🧵 Opening conversation:", {
+      room: conv.room,
+      other: {
+        id: conv.other?.id,
+        username: conv.other?.username,
+        fullname: conv.other?.fullname,
+      },
+    });
 
     setActiveRoom(conv.room);
     setActivePeer(conv.other);
     setMessages([]);
     socket.emit("join-room", conv.room);
 
+    debug("📚 Fetching history for", conv.room);
     const res = await fetch(
       `http://localhost:3000/api/messages/${encodeURIComponent(conv.room)}`,
       { credentials: "include" }
     );
     const history = res.ok ? await res.json() : [];
+    debug("📚 History loaded:", history.length);
     seenIdsRef.current.clear();
     history.forEach((m) => m?._id && seenIdsRef.current.add(m._id));
     setMessages(history);
   };
 
   const handleSendMessage = () => {
-    if (!socket) return;
+    if (!socket) {
+      debug("❌ No socket connection");
+      return;
+    }
     const text = newMessage.trim();
-    if (!text || !activeRoom) return;
+    if (!text || !activeRoom) {
+      debug("❌ Cannot send:", { hasText: !!text, activeRoom });
+      return;
+    }
 
-    console.log("📤 Sending message:", {
+    debug("📤 Sending message:", {
       room: activeRoom,
-      message: text.substring(0, 50) + "...",
+      textPreview: text.substring(0, 80),
     });
-    // correct payload
     socket.emit("message", { room: activeRoom, message: text });
     setNewMessage("");
   };
@@ -240,15 +406,13 @@ export default function DMChat() {
   const filteredConversations = conversations.filter((c) => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return true;
-    return (
-      c.other?.fullname?.toLowerCase()?.includes(q) ||
-      c.other?.username?.toLowerCase()?.includes(q) ||
-      c.other?.id?.toLowerCase?.()?.includes(q)
-    );
+    const name = displayName(c.other).toLowerCase();
+    const idStr = String(c.other?.id || "").toLowerCase();
+    return name.includes(q) || idStr.includes(q);
   });
 
   /* ------- render ------- */
-  if (!token) {
+  if (!hasToken) {
     return (
       <div className="h-screen bg-gray-100 flex items-center justify-center text-gray-700">
         Please log in to start messaging.
@@ -328,7 +492,7 @@ export default function DMChat() {
                 }`}
               >
                 <div className="font-semibold text-gray-900 truncate">
-                  {conv.other?.fullname || conv.other?.username || conv.other?.id}
+                  {displayName(conv.other)}
                 </div>
                 <div className="text-xs text-gray-500 truncate">
                   {conv.lastMessage
@@ -353,7 +517,7 @@ export default function DMChat() {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="font-semibold text-gray-900">
-                {activePeer?.fullname || activePeer?.username || activePeer?.id || "No conversation selected"}
+                {activePeer ? displayName(activePeer) : "No conversation selected"}
               </h2>
               <p className="text-sm text-gray-500">
                 {activeRoom ? "Direct Message" : "Create or open a conversation"}
@@ -376,7 +540,10 @@ export default function DMChat() {
               {messages.map((m) => {
                 const mine = m?.sender?.id === me?.id;
                 return (
-                  <div key={m._id || `${m.createdAt}-${Math.random()}`} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
+                  <div
+                    key={m._id || `${m.createdAt}-${Math.random()}`}
+                    className={`flex ${mine ? "justify-end" : "justify-start"}`}
+                  >
                     <div
                       className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${
                         mine
@@ -385,9 +552,16 @@ export default function DMChat() {
                       }`}
                     >
                       <p className="text-sm">{m.message}</p>
-                      <p className={`text-xs mt-1 ${mine ? "text-blue-100" : "text-gray-500"}`}>
+                      <p
+                        className={`text-xs mt-1 ${
+                          mine ? "text-blue-100" : "text-gray-500"
+                        }`}
+                      >
                         {m.createdAt
-                          ? new Date(m.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+                          ? new Date(m.createdAt).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })
                           : ""}
                       </p>
                     </div>
@@ -401,21 +575,31 @@ export default function DMChat() {
 
         <div className="bg-white border-t border-gray-200 p-4">
           <div className="flex items-center space-x-3">
-            <button type="button" className="p-2 rounded-full hover:bg-gray-100 transition-colors">
+            <button
+              type="button"
+              className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+            >
               <Paperclip className="w-5 h-5 text-gray-600" />
             </button>
 
             <div className="flex-1 relative">
               <input
                 type="text"
-                placeholder={activeRoom ? "Type a message…" : "Open or create a conversation first"}
+                placeholder={
+                  activeRoom ? "Type a message…" : "Open or create a conversation first"
+                }
                 className="w-full px-4 py-2 border border-gray-300 rounded-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none pr-12"
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.isComposing) handleSendMessage();
+                }}
                 disabled={!activeRoom}
               />
-              <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-gray-100 transition-colors">
+              <button
+                type="button"
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-gray-100 transition-colors"
+              >
                 <Smile className="w-4 h-4 text-gray-600" />
               </button>
             </div>
