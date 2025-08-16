@@ -46,26 +46,26 @@ export default function LoginPage() {
 
     } catch (error) {
       console.error("Sign In Failed:", error.message);
-      // You can add more user-friendly error handling here, like a state for an error message
+      // You can add more user-friendly error handling here
     }
   };
 
   return (
-    <div className="min-h-screen bg-[rgb(3,3,3)] flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-md bg-[rgb(10,10,10)] rounded-md border border-[rgb(10,10,10)] py-7 px-6">
+    <div className="min-h-screen bg-[rgb(250,250,255)] flex items-center justify-center px-4 py-8">
+      <div className="w-full max-w-md bg-white rounded-xl border py-8 px-6 shadow-sm">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-[#57bfee] mb-2">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Welcome Back
           </h1>
-          <p className="text-sm text-[#a6a6a6]">
-            Sign in to your TutorConnect account
+          <p className="text-sm text-gray-500">
+            Sign in to your StudyBuddy account
           </p>
         </div>
-        <div className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label
               htmlFor="email"
-              className="block text-white text-sm font-semibold mb-3"
+              className="block text-gray-700 text-sm font-medium mb-2"
             >
               Email
             </label>
@@ -76,14 +76,14 @@ export default function LoginPage() {
               value={formData.email}
               onChange={handleInputChange}
               placeholder="your.email@gmail.com"
-              className="w-full px-4 py-4 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#57bfee] focus:border-transparent transition-colors"
+              className="w-full px-4 py-3 bg-[rgb(250,250,255)] border border-gray-700 rounded-lg text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[rgb(136,134,237)] focus:border-transparent transition-colors"
               required
             />
           </div>
           <div>
             <label
               htmlFor="password"
-              className="block text-white text-sm font-semibold mb-3"
+              className="block text-gray-700 text-sm font-medium mb-2"
             >
               Password
             </label>
@@ -94,13 +94,13 @@ export default function LoginPage() {
               value={formData.password}
               onChange={handleInputChange}
               placeholder="Enter your password"
-              className="w-full px-4 py-4 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#57bfee] focus:border-transparent transition-colors"
+              className="w-full px-4 py-3 bg-[rgb(250,250,255)] border border-gray-700 rounded-lg text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[rgb(136,134,237)] focus:border-transparent transition-colors"
               required
             />
           </div>
           <button
-            onClick={handleSubmit}
-            className="w-full bg-[#57bfee] text-black py-4 px-6 rounded-lg font-semibold text-lg hover:bg-[#4ab0e0] transition-colors focus:outline-none focus:ring-2 focus:ring-[#57bfee] focus:ring-offset-2 focus:ring-offset-black"
+            type="submit"
+            className="w-full bg-[rgb(136,134,237)] text-white py-3 px-6 rounded-lg font-semibold text-lg hover:bg-[rgb(116,114,217)] transition-colors focus:outline-none focus:ring-2 focus:ring-[rgb(136,134,237)] focus:ring-offset-2"
           >
             Sign In
           </button>
@@ -109,17 +109,24 @@ export default function LoginPage() {
               <div className="w-full border-t border-gray-700"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-[rgb(10,10,10)] text-gray-400">or</span>
+              <span className="px-4 bg-white text-gray-500">or</span>
             </div>
           </div>
           
-        </div>
+          {/* Uncomment if you want the Google sign-in button */}
+          {/* <button
+            type="button"
+            className="w-full bg-white text-gray-800 py-3 px-6 rounded-lg font-semibold text-lg hover:bg-gray-100 transition-colors border border-gray-700 flex items-center justify-center gap-3"
+          >
+            <FcGoogle size={24} />
+            Sign in with Google
+          </button> */}
         <div className="text-center mt-8">
-          <p className="text-[#a6a6a6]">
-            Don't have an account?{" "}
+          <p className="text-gray-500">
+            Don’t have an account?{" "}
             <button
               onClick={() => navigate("/signup")}
-              className="text-[#57bfee] hover:text-[#4ab0e0] font-medium transition-colors"
+              className="text-[rgb(136,134,237)] hover:text-[rgb(116,114,217)] font-medium transition-colors"
             >
               Sign up here
             </button>
@@ -127,5 +134,6 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  </div>
   );
 }

@@ -1,6 +1,8 @@
+
 import React, { useEffect, useState } from "react";
 import { GraduationCap, House, UsersRound, CircleUser, Menu, X } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
+
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -45,6 +47,7 @@ export default function Navbar() {
 
         {/* Desktop nav */}
         <div className="hidden md:flex gap-5 items-center">
+
           <NavLink to="/homepage" className={getButtonClass("/homepage")}>
             <House className="w-4 h-4" />
             Home
@@ -59,6 +62,7 @@ export default function Navbar() {
               Create Profile
             </NavLink>
           )}
+
         </div>
 
         {/* Mobile toggle */}
@@ -79,6 +83,7 @@ export default function Navbar() {
           <NavLink to="/listings" className={getButtonClass("/listings")} onClick={() => setIsOpen(false)}>
             <UsersRound className="w-4 h-4" />
             Browse
+
           </NavLink>
           {!isAuthed && (
             <NavLink
@@ -90,6 +95,7 @@ export default function Navbar() {
               Create Profile
             </NavLink>
           )}
+
         </div>
       )}
     </nav>

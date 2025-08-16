@@ -3,6 +3,7 @@ import { Funnel, Plus } from "lucide-react";
 import SearchBar from "../components/SearchBar";
 import StudyUserCard from "../components/StudyUserCard";
 
+
 export default function BrowsePage() {
   return (
     <div className="bg-[rgb(246,246,256)] pt-5 min-h-screen px-4 md:px-8">
