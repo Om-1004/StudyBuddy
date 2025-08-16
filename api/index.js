@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";             
 import authRouter from "./routes/auth.route.js";
+import listingsRouter from "./routes/listings.route.js"
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
@@ -27,6 +28,7 @@ app.use(
 
 app.use(express.json());
 app.use("/api/auth", authRouter);
+app.use("/api/listings", listingsRouter)
 
 app.listen(3000, () => {
   console.log("Server listening on port: 3000");

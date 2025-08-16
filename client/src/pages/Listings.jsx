@@ -32,9 +32,14 @@ const BuddyList = ({ buddies = [] }) => {
                 ))}
               </div>
 
-
+              {/* Availability and Location */}
               <div className="text-sm text-gray-600 space-y-1 mb-4">
-    
+                <div className="flex items-center space-x-2">
+                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                  <span>{buddy.availability}</span>
+                </div>
                 <div className="flex items-center space-x-2">
                   <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.899a2 2 0 01-2.828 0L6.343 16.657a6 6 0 118.485-8.485l.707.707.707-.707a6 6 0 018.485 8.485z"></path>
@@ -44,6 +49,7 @@ const BuddyList = ({ buddies = [] }) => {
                 </div>
               </div>
 
+              {/* Connect Button */}
               <div className="text-center mt-auto">
                 <button className="bg-indigo-500 text-white font-semibold py-3 px-6 rounded-lg w-full hover:bg-indigo-600 transition-colors duration-200">
                   Connect for Study Session
@@ -63,44 +69,64 @@ const BuddyList = ({ buddies = [] }) => {
 };
 
 export default function Listings() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [courseFilter, setCourseFilter] = useState('');
-  const [yearFilter, setYearFilter] = useState('All years');
-  const [locationFilter, setLocationFilter] = useState('Any location');
+  const [sidebardata, setSidebardata] = useState({
+    searchTerm: '',
+    course: '',
+    year: 'All years',
+    location: 'Any location',
+  });
   
   const [filteredBuddies, setFilteredBuddies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-
-  const DUMMY_BUDDIES = [
-    { _id: 'b1', fullname: 'Emma Chen', major: 'Computer Science', courses: ['Data Structures', 'Computer Science 101', 'Linear Algebra'], year: 'Junior', location: 'Library', bio: 'Passionate about algorithms and coding. Always happy to help explain complex concepts and learn from others.' },
-    { _id: 'b2', fullname: 'Jane Smith', major: 'Biology', courses: ['BIO 301', 'CHEM 101'], year: 'Junior', location: 'Online', bio: 'I love all things biology, especially genetics. I am available for study sessions.' },
-    { _id: 'b3', fullname: 'Peter Jones', major: 'Mathematics', courses: ['MATH 101'], year: 'Freshman', location: 'Coffee Shop', bio: 'Looking for a study buddy for calculus. I am a hard worker and love coffee.' },
-    { _id: 'b4', fullname: 'Sarah Lee', major: 'Computer Science', courses: ['CS 101', 'CS 303'], year: 'Senior', location: 'Library', bio: 'I am a senior in computer science and would love to help or get help with complex problems.' },
-  ];
-
   const years = ['All years', 'Freshman', 'Sophomore', 'Junior', 'Senior'];
   const studyLocations = ["Any location", "Coffee Shop", "Library", "Study Room", "Online"];
 
   useEffect(() => {
-    // Simulate API call and set a small timeout to show a loading state
-    setLoading(true);
-    setTimeout(() => {
-      const newFilteredBuddies = DUMMY_BUDDIES.filter(buddy => {
-        const matchesSearch = buddy.fullname.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            buddy.major.toLowerCase().includes(searchQuery.toLowerCase());
+    // This is the async function that will fetch the data
+    const fetchBuddies = async () => {
+      setLoading(true);
+      setError(null);
+      
+      try {
+        // IMPORTANT: Replace this URL with your actual backend endpoint
+        const url = new URL('http://localhost:3000/api/listings/getListings');
+        url.searchParams.append('searchTerm', sidebardata.searchTerm);
+        url.searchParams.append('course', sidebardata.course);
+        url.searchParams.append('year', sidebardata.year === 'All years' ? '' : sidebardata.year);
+        url.searchParams.append('location', sidebardata.location === 'Any location' ? '' : sidebardata.location);
         
-        const matchesCourse = courseFilter === '' || buddy.courses.some(course => course.toLowerCase().includes(courseFilter.toLowerCase()));
-        const matchesYear = yearFilter === 'All years' || buddy.year === yearFilter;
-        const matchesLocation = locationFilter === 'Any location' || buddy.location === locationFilter;
-        return matchesSearch && matchesCourse && matchesYear && matchesLocation;
-      });
-      setFilteredBuddies(newFilteredBuddies);
-      setLoading(false);
-    }, 500);
+        // Make the API call
+        const response = await fetch(url.toString());
 
-  }, [searchQuery, courseFilter, yearFilter, locationFilter]);
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+
+        const data = await response.json();
+        setFilteredBuddies(data);
+
+      } catch (err) {
+        console.error("Failed to fetch data:", err);
+        setError("Failed to load study buddies. Please ensure your backend server is running.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBuddies();
+  }, [sidebardata]); // Depend on sidebardata to re-fetch when any filter changes
+
+  const handleChange = (e) => {
+    setSidebardata({ ...sidebardata, [e.target.id]: e.target.value });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    // No need for a URL change in this self-contained version, just trigger a re-render
+    // by changing the sidebardata state. The useEffect hook handles the rest.
+  };
 
   return (
     <div className="min-h-screen bg-gray-100 p-4 md:p-8 font-sans antialiased">
@@ -131,82 +157,96 @@ export default function Listings() {
         <div className="bg-white p-6 md:p-8 rounded-lg shadow-md">
           <h2 className="text-lg md:text-xl font-semibold text-gray-800 mb-4">Find Your Study Buddy</h2>
           
-          {/* Search bar */}
-          <div className="mb-4">
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                </svg>
-              </div>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by name or major..."
-                className="block w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors duration-200"
-              />
-            </div>
-          </div>
-
-          {/* Filters dropdowns */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-
-            <div className="relative">
-              <input
-                value={courseFilter}
-                placeholder="Search by course"
-                onChange={(e) => setCourseFilter(e.target.value)}
-                className="block w-full py-2 px-4 border border-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors duration-200"
-              />
-            </div>
-
-            {/* Years Dropdown */}
-            <div className="relative">
-              <select
-                value={yearFilter}
-                onChange={(e) => setYearFilter(e.target.value)}
-                className="block w-full py-2 px-4 border border-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors duration-200"
-              >
-                {years.map(year => (
-                  <option key={year} value={year}>{year}</option>
-                ))}
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+          <form onSubmit={handleSubmit}>
+            {/* Search bar */}
+            <div className="mb-4">
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                  </svg>
+                </div>
+                <input
+                  type="text"
+                  id="searchTerm"
+                  value={sidebardata.searchTerm}
+                  onChange={handleChange}
+                  placeholder="Search by name or major..."
+                  className="block w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors duration-200"
+                />
               </div>
             </div>
 
-            <div className="relative">
-              <select
-                value={locationFilter}
-                onChange={(e) => setLocationFilter(e.target.value)}
-                className="block w-full py-2 px-4 border border-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors duration-200"
-              >
-                {studyLocations.map(location => (
-                  <option key={location} value={location}>{location}</option>
-                ))}
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+            {/* Filters dropdowns */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+              <div className="relative">
+                <input
+                  type="text"
+                  id="course"
+                  value={sidebardata.course}
+                  placeholder="Search by course"
+                  onChange={handleChange}
+                  className="block w-full py-2 px-4 border border-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors duration-200"
+                />
+              </div>
+
+              {/* Years Dropdown */}
+              <div className="relative">
+                <select
+                  id="year"
+                  value={sidebardata.year}
+                  onChange={handleChange}
+                  className="block w-full py-2 px-4 border border-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors duration-200"
+                >
+                  {years.map(year => (
+                    <option key={year} value={year}>{year}</option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                  <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                </div>
+              </div>
+
+              <div className="relative">
+                <select
+                  id="location"
+                  value={sidebardata.location}
+                  onChange={handleChange}
+                  className="block w-full py-2 px-4 border border-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors duration-200"
+                >
+                  {studyLocations.map(location => (
+                    <option key={location} value={location}>{location}</option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                  <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                </div>
               </div>
             </div>
-          </div>
+            <button type="submit" className="mt-4 bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-700 transition-colors duration-200 w-full">
+              Search
+            </button>
+          </form>
         </div>
 
         {/* Conditional rendering based on state */}
-        {loading ? (
-          <div className="text-center text-gray-500 py-10">
-            <p className="text-lg">Loading study buddies...</p>
+        <div className='flex-1'>
+          <h1 className='text-3xl font-semibold border-b p-3 text-slate-700 mt-5'>
+            Listing results:
+          </h1>
+          <div className='p-7 flex flex-wrap gap-4'>
+            {loading ? (
+              <p className='text-xl text-slate-700'>Loading study buddies...</p>
+            ) : error ? (
+              <p className='text-xl text-red-500'>{error}</p>
+            ) : filteredBuddies.length === 0 ? (
+              <p className='text-xl text-slate-700'>No study buddies found!</p>
+            ) : (
+              <BuddyList buddies={filteredBuddies} />
+            )}
           </div>
-        ) : error ? (
-          <div className="text-center text-red-500 py-10">
-            <p className="text-lg">{error}</p>
-          </div>
-        ) : (
-          <BuddyList buddies={filteredBuddies} />
-        )}
-        
+        </div>
       </div>
     </div>
   );
