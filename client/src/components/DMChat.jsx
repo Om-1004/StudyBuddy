@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { io } from "socket.io-client";
 import { Search, Paperclip, Smile, Send, Plus } from "lucide-react";
 
-/* ---------------- helpers ---------------- */
 
 function getCookie(name) {
   const value = `; ${document.cookie}`;
@@ -18,12 +17,6 @@ function makeDmRoom(myId, otherId) {
   return room;
 }
 
-/**
- * Resolve a username to a user object: { id, username, ... }
- * -> Implement this route in your API:
- *    GET /api/users/lookup?username=<username>
- *    returns: { user: { id, username } }
- */
 async function resolveUserByUsername(username) {
   console.log("🔍 Looking up user:", username);
   const res = await fetch(
@@ -40,9 +33,8 @@ async function resolveUserByUsername(username) {
 /* ---------------- component ---------------- */
 
 export default function DMChat() {
-  // auth + socket
   const token = localStorage.getItem("accessToken") || getCookie("accessToken");
-  const [me, setMe] = useState(null); // { id, email, username? }
+  const [me, setMe] = useState(null); 
 
   const socket = useMemo(() => {
     if (!token) {
@@ -56,12 +48,11 @@ export default function DMChat() {
     });
   }, [token]);
 
-  // ui state
   const [isCreating, setIsCreating] = useState(false);
   const [newUsername, setNewUsername] = useState("");
-  const [conversations, setConversations] = useState([]); // [{ room, other: { id, username } }]
+  const [conversations, setConversations] = useState([]); 
   const [activeRoom, setActiveRoom] = useState("");
-  const [activePeer, setActivePeer] = useState(null); // { id, username }
+  const [activePeer, setActivePeer] = useState(null); 
   const [messages, setMessages] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [newMessage, setNewMessage] = useState("");
@@ -69,7 +60,6 @@ export default function DMChat() {
   const messagesEndRef = useRef(null);
   const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
 
-  /* ------- load me ------- */
   useEffect(() => {
     if (!token) return;
     (async () => {
@@ -85,7 +75,6 @@ export default function DMChat() {
     })();
   }, [token]);
 
-  /* ------- socket listeners ------- */
   useEffect(() => {
     if (!socket) return;
 
@@ -129,8 +118,6 @@ export default function DMChat() {
     scrollToBottom();
   }, [messages]);
 
-  /* ------- actions ------- */
-
   const startConversation = async (e) => {
     e?.preventDefault?.();
     if (!socket || !me) {
@@ -145,10 +132,9 @@ export default function DMChat() {
     }
 
     try {
-      const other = await resolveUserByUsername(username); // { id, username }
+      const other = await resolveUserByUsername(username); 
       const room = makeDmRoom(me.id, other.id);
 
-      // add to list if missing
       setConversations((prev) => {
         if (prev.some((c) => c.room === room)) {
           console.log("📝 Conversation already exists:", room);
@@ -158,14 +144,12 @@ export default function DMChat() {
         return [{ room, other }, ...prev];
       });
 
-      // join + activate
       console.log("🏠 Joining room:", room);
       setActiveRoom(room);
       setActivePeer(other);
       setMessages([]);
       socket.emit("join-room", room);
 
-      // history
       try {
         console.log("📚 Fetching message history for:", room);
         const res = await fetch(
@@ -232,7 +216,6 @@ export default function DMChat() {
     setNewMessage("");
   };
 
-  /* ------- filters ------- */
   const filteredConversations = conversations.filter((c) => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return true;
@@ -241,8 +224,6 @@ export default function DMChat() {
       c.other?.id?.toLowerCase?.()?.includes(q)
     );
   });
-
-  /* ------- render ------- */
 
   if (!token) {
     return (
@@ -254,7 +235,6 @@ export default function DMChat() {
 
   return (
     <div className="h-screen bg-gray-100 flex">
-      {/* Sidebar */}
       <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center justify-between mb-4">
@@ -331,7 +311,6 @@ export default function DMChat() {
         </div>
       </div>
 
-      {/* Main Chat */}
       <div className="flex-1 flex flex-col">
         <div className="bg-white border-b border-gray-200 px-6 py-4">
           <div className="flex items-center justify-between">

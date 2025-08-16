@@ -3,7 +3,7 @@
 import express from "express";
 import cors from "cors";             
 import authRouter from "./routes/auth.route.js";
-import tutorRouter from "./routes/tutor.route.js"
+import listingsRouter from "./routes/listings.route.js"
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
@@ -36,23 +36,17 @@ app.use(
 app.use(cookieParser());
 app.use(express.json());
 
-/* ---------- REST Routes ---------- */
 app.use("/api/auth", authRouter);
-// app.use("/api/tutor", tutorRouter);
-
 app.use("/api/users", userRouter);
 
-// Who am I (for DM UI to know my id/email)
 app.get("/api/me", verifyToken, (req, res) => {
-  res.json({ user: req.user }); // whatever you encoded into the JWT (e.g., { id, email })
+  res.json({ user: req.user }); 
 });
 
-/* ------ DM helpers ------ */
 function isDmRoom(room) {
   return typeof room === "string" && room.startsWith("dm:");
 }
 function parseDmRoom(room) {
-  // "dm:<idA>|<idB>"
   const raw = room.slice(3);
   const [a, b] = raw.split("|");
   return [a, b];
