@@ -37,10 +37,7 @@ export const signup = async (req, res) => {
     const savedUser = await newUser.save();
     const token = jwt.sign({ id: savedUser._id }, process.env.JWT_SECRET);
 
-    res.cookie("accessToken", token, {
-      httpOnly: true,
-      maxAge: 1000 * 60 * 60 * 24
-    });
+    res.cookie("accessToken", token, {httpOnly: true}).status(200).json(rest)
 
     res.status(201).json({
       message: "User created successfully",
@@ -68,7 +65,14 @@ export const signin = async (req, res) => {
         if (!bcryptjs.compareSync(password, validUser.password)) {return res.status(400).json({ message: "Invalid credentials" });}
         const token = jwt.sign({ id: validUser._id }, process.env.JWT_SECRET)
         const { password: pass, ...rest } = validUser._doc;
-        res.cookie("accessToken", token, {httpOnly: true}).status(200).json(rest)
+        
+        // Corrected cookie options for development
+        res.cookie("accessToken", token, {
+          httpOnly: true,
+          sameSite: 'Lax', // Allows cookie to be sent with cross-origin requests
+          secure: false,     // Allows cookie to be sent over HTTP in development
+          maxAge: 1000 * 24 * 24 * 24
+        }).status(200).json(rest)
 
     } catch (error) {
        res.status(500).json({message: "Login Failed"});
