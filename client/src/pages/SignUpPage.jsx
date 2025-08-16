@@ -152,7 +152,7 @@ export default function SignUpPage() {
     try {
       const res = await api.post("/api/auth/signUp", payload);
       console.log(res.data);
-      navigate("/homepage");
+      navigate("/signin");
     } catch (error) {
       console.error("Sign Up Failed:", error?.response?.data || error.message);
     }
