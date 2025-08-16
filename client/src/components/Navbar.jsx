@@ -2,40 +2,28 @@ import React, { useEffect, useState } from "react";
 import { GraduationCap, House, UsersRound, CircleUser, Menu, X } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 
-function getCookie(name) {
-  if (typeof document === "undefined") return null;
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop().split(";").shift();
-  return null;
-}
-
-function hasTokenNow() {
-  if (typeof window === "undefined") return false;
-  const raw =
-    (localStorage.getItem("accessToken") || getCookie("accessToken") || "").trim();
-  // defend against string "undefined"/"null"
-  return raw !== "" && raw !== "undefined" && raw !== "null";
-}
-
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
-  const [hasAccessToken, setHasAccessToken] = useState(hasTokenNow());
+  const [isAuthed, setIsAuthed] = useState(false);
 
-  // refresh token presence on route changes
+  // probe auth on mount and whenever route changes
   useEffect(() => {
-    setHasAccessToken(hasTokenNow());
+    (async () => {
+      try {
+        const res = await fetch("http://localhost:3000/api/me", {
+          credentials: "include",
+        });
+        if (res.ok) {
+          setIsAuthed(true);
+        } else {
+          setIsAuthed(false);
+        }
+      } catch {
+        setIsAuthed(false);
+      }
+    })();
   }, [location.key]);
-
-  // refresh when token changes in another tab/window
-  useEffect(() => {
-    const onStorage = (e) => {
-      if (e.key === "accessToken") setHasAccessToken(hasTokenNow());
-    };
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
-  }, []);
 
   const getButtonClass = (path) => {
     const baseClass = "flex items-center gap-2 rounded-md px-4 py-1 cursor-pointer";
@@ -65,8 +53,8 @@ export default function Navbar() {
             <UsersRound className="w-4 h-4" />
             Browse
           </NavLink>
-          {!hasAccessToken && (
-            <NavLink to="/create-profile" className={getButtonClass("/create-profile")}>
+          {!isAuthed && (
+            <NavLink to="/signin" className={getButtonClass("/signin")}>
               <CircleUser className="w-4 h-4" />
               Create Profile
             </NavLink>
@@ -92,10 +80,10 @@ export default function Navbar() {
             <UsersRound className="w-4 h-4" />
             Browse
           </NavLink>
-          {!hasAccessToken && (
+          {!isAuthed && (
             <NavLink
-              to="/create-profile" // fixed path (was /signup before)
-              className={getButtonClass("/create-profile")}
+              to="/signin"
+              className={getButtonClass("/signin")}
               onClick={() => setIsOpen(false)}
             >
               <CircleUser className="w-4 h-4" />
