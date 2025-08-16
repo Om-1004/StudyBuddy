@@ -1,9 +1,12 @@
 // api/index.js
 import express from "express";
-import cors from "cors";
-import cookieParser from "cookie-parser";
-import dotenv from "dotenv";
+
+import cors from "cors";             
+import authRouter from "./routes/auth.route.js";
+import listingsRouter from "./routes/listings.route.js"
 import mongoose from "mongoose";
+import dotenv from "dotenv";
+import cookieParser from "cookie-parser";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import jwt from "jsonwebtoken";
@@ -37,6 +40,7 @@ app.use(express.json());
 
 /* ---------- REST Routes ---------- */
 app.use("/api/auth", authRouter);
+
 app.use("/api/tutor", tutorRouter);
 app.use("/api/users", userRouter);
 
@@ -60,6 +64,9 @@ function userAllowedInRoom(userId, room) {
   const [a, b] = parseDmRoom(room);
   return userId === a || userId === b;
 }
+
+app.use("/api/listings", listingsRouter)
+
 
 // Fetch message history (protected). If DM, only participants may read.
 app.get("/api/messages/:roomId", verifyToken, async (req, res) => {
