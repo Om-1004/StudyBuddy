@@ -1,38 +1,61 @@
-
 import React, { useEffect, useState } from "react";
-import { GraduationCap, House, UsersRound, CircleUser, Menu, X, MessageCircle } from "lucide-react";
-import { NavLink, useLocation } from "react-router-dom";
-
+import {
+  GraduationCap,
+  House,
+  UsersRound,
+  CircleUser,
+  Menu,
+  X,
+  MessageCircle,
+  LogOut,
+} from "lucide-react";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
   const [isAuthed, setIsAuthed] = useState(false);
+  const navigate = useNavigate();
 
-  // probe auth on mount and whenever route changes
+  // Probe auth on mount and whenever the route changes
   useEffect(() => {
     (async () => {
       try {
         const res = await fetch("http://localhost:3000/api/me", {
           credentials: "include",
         });
-        if (res.ok) {
-          setIsAuthed(true);
-        } else {
-          setIsAuthed(false);
-        }
+        setIsAuthed(res.ok);
       } catch {
         setIsAuthed(false);
       }
     })();
   }, [location.key]);
 
-const getButtonClass = (path) => {
   const baseClass = "flex items-center gap-2 rounded-md px-4 py-1 cursor-pointer";
-  const activeClass = "bg-[#8776E9] text-white";   // <-- changed text to white
+  const activeClass = "bg-[#8776E9] text-white";
   const inactiveClass = "text-black hover:bg-[#FFDBE9]";
-  return `${baseClass} ${location.pathname === path ? activeClass : inactiveClass}`;
-};
+  const navButtonClass = (path) =>
+    `${baseClass} ${location.pathname === path ? activeClass : inactiveClass}`;
+  const actionButtonClass = `${baseClass} ${inactiveClass}`; // never 'active'
+
+  const handleSignOut = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch("http://localhost:3000/api/auth/signout", {
+        method: "POST",
+        credentials: "include",
+      });
+      if (res.ok) {
+        setIsAuthed(false);
+        setIsOpen(false);
+        navigate("/");
+      } else {
+        console.error("Sign-out failed");
+      }
+    } catch (err) {
+      console.error("Error signing out:", err);
+    }
+  };
 
   return (
     <nav className="bg-[#FAFAFF] sticky top-0 z-50 shadow-md px-4 md:px-20 py-4">
@@ -47,29 +70,34 @@ const getButtonClass = (path) => {
 
         {/* Desktop nav */}
         <div className="hidden md:flex gap-5 items-center">
-
-          <NavLink 
-  to="/" 
-  className={`${getButtonClass("/")}`}
->
-            <House className="w-4 h-4]"/>
+          <NavLink to="/" className={navButtonClass("/")}>
+            <House className="w-4 h-4" />
             Home
           </NavLink>
-          <NavLink to="/listings" className= {getButtonClass("/listings") }>
+
+          <NavLink to="/listings" className={navButtonClass("/listings")}>
             <UsersRound className="w-4 h-4" />
             Browse
           </NavLink>
-          <NavLink to="/chat" className={getButtonClass("/chat")}>
+
+          <NavLink to="/chat" className={navButtonClass("/chat")}>
             <MessageCircle className="w-4 h-4" />
             Message
           </NavLink>
+
           {!isAuthed && (
-            <NavLink to="/signin" className={getButtonClass("/signin")}>
+            <NavLink to="/signin" className={navButtonClass("/signin")}>
               <CircleUser className="w-4 h-4" />
               Create Profile
             </NavLink>
           )}
 
+          {isAuthed && (
+            <button type="button" onClick={handleSignOut} className={actionButtonClass}>
+              <LogOut className="w-4 h-4" />
+              Sign Out
+            </button>
+          )}
         </div>
 
         {/* Mobile toggle */}
@@ -83,19 +111,33 @@ const getButtonClass = (path) => {
       {/* Mobile menu */}
       {isOpen && (
         <div className="flex flex-col gap-2 mt-4 md:hidden">
-          <NavLink to="/homepage" className={getButtonClass("/homepage")} onClick={() => setIsOpen(false)}>
+          <NavLink to="/" className={navButtonClass("/")} onClick={() => setIsOpen(false)}>
             <House className="w-4 h-4" />
             Home
           </NavLink>
-          <NavLink to="/listings" className={getButtonClass("/listings")} onClick={() => setIsOpen(false)}>
+
+          <NavLink
+            to="/listings"
+            className={navButtonClass("/listings")}
+            onClick={() => setIsOpen(false)}
+          >
             <UsersRound className="w-4 h-4" />
             Browse
-
           </NavLink>
+
+          <NavLink
+            to="/chat"
+            className={navButtonClass("/chat")}
+            onClick={() => setIsOpen(false)}
+          >
+            <MessageCircle className="w-4 h-4" />
+            Message
+          </NavLink>
+
           {!isAuthed && (
             <NavLink
               to="/signin"
-              className={getButtonClass("/signin")}
+              className={navButtonClass("/signin")}
               onClick={() => setIsOpen(false)}
             >
               <CircleUser className="w-4 h-4" />
@@ -103,6 +145,16 @@ const getButtonClass = (path) => {
             </NavLink>
           )}
 
+          {isAuthed && (
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className={actionButtonClass}
+            >
+              <LogOut className="w-4 h-4" />
+              Sign Out
+            </button>
+          )}
         </div>
       )}
     </nav>
