@@ -1,4 +1,4 @@
-// DMChat.jsx (with detailed console logs for user/conversation/message info)
+// DMChat.jsx (cookie-based auth; no token reading from JS)
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { io } from "socket.io-client";
 import { Search, Paperclip, Smile, Send, Plus } from "lucide-react";
@@ -9,13 +9,6 @@ const debug = (...args) => DEBUG && console.log("[DMChat]", ...args);
 const group = (label) => DEBUG && console.group(label);
 const groupEnd = () => DEBUG && console.groupEnd();
 const table = (rows) => DEBUG && console.table(rows);
-
-function maskToken(t) {
-  if (!t) return null;
-  const s = String(t);
-  if (s.length <= 12) return s.replace(/./g, "•");
-  return `${s.slice(0, 6)}…${s.slice(-6)} (${s.length} chars)`;
-}
 
 function logUser(label, u) {
   if (!DEBUG) return;
@@ -49,18 +42,6 @@ function logConvList(convs, label = "Conversations") {
 }
 
 /* ---------------- helpers ---------------- */
-function getCookie(name) {
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop().split(";").shift();
-  return null;
-}
-
-function cleanToken(raw) {
-  const t = (raw || "").trim();
-  return t && t !== "undefined" && t !== "null" ? t : null;
-}
-
 function displayName(other) {
   const n1 = (other?.fullname || "").trim();
   const n2 = (other?.username || "").trim();
@@ -105,29 +86,20 @@ async function loadConversations() {
 
 /* ---------------- component ---------------- */
 export default function DMChat() {
-  // token diagnostics
-  const lsTokenRaw = localStorage.getItem("accessToken");
-  const cookieTokenRaw = getCookie("accessToken");
-  debug("🔑 Tokens -> localStorage:", maskToken(lsTokenRaw), "cookie:", maskToken(cookieTokenRaw));
-
-  const token = cleanToken(lsTokenRaw || cookieTokenRaw);
-  const hasToken = Boolean(token);
-
+  const [authed, setAuthed] = useState(false);
   const [me, setMe] = useState(null);
 
-  // socket (create once per token)
+  // socket (create once we know we're authenticated)
   const socket = useMemo(() => {
-    if (!hasToken) {
-      debug("❌ No token found, not creating socket");
+    if (!authed) {
+      debug("❌ Not authenticated, not creating socket");
       return null;
     }
-    debug("🔌 Creating socket connection", token ? "with token" : "(no token)");
+    debug("🔌 Creating socket connection (cookie-based auth)");
     return io("http://localhost:3000", {
-      withCredentials: true,
-      auth: token ? { token } : undefined,
+      withCredentials: true, // send httpOnly cookie automatically
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasToken, token]);
+  }, [authed]);
 
   // ui state
   const [isCreating, setIsCreating] = useState(false);
@@ -154,9 +126,8 @@ export default function DMChat() {
   // dedupe messages by _id within a room
   const seenIdsRef = useRef(new Set());
 
-  /* ------- bootstrap me & conversations ------- */
+  /* ------- bootstrap: probe /api/me, then load conversations ------- */
   useEffect(() => {
-    if (!hasToken) return;
     (async () => {
       try {
         debug("👤 Fetching /api/me …");
@@ -166,18 +137,21 @@ export default function DMChat() {
         if (!res.ok) throw new Error("unauthorized");
         const data = await res.json();
         setMe(data.user);
+        setAuthed(true);
         logUser("Me (/api/me)", data.user);
 
         setLoadingConversations(true);
         const convs = await loadConversations();
         setConversations(convs);
       } catch (e) {
-        console.error("[DMChat] ❌ Failed to bootstrap messaging:", e);
+        setAuthed(false);
+        setMe(null);
+        console.error("[DMChat] ❌ Not authenticated or bootstrap failed:", e);
       } finally {
         setLoadingConversations(false);
       }
     })();
-  }, [hasToken]);
+  }, []);
 
   // log whenever "me" changes
   useEffect(() => {
@@ -412,7 +386,7 @@ export default function DMChat() {
   });
 
   /* ------- render ------- */
-  if (!hasToken) {
+  if (!authed) {
     return (
       <div className="h-screen bg-gray-100 flex items-center justify-center text-gray-700">
         Please log in to start messaging.
