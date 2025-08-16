@@ -11,7 +11,10 @@ export const signup = async (req, res) => {
     role,
     bio,
     courses,
-    university
+    university, 
+    major, 
+    year,
+    location
   } = req.body;
 
   const hashedPassword = bcryptjs.hashSync(password, 12);
@@ -24,7 +27,10 @@ export const signup = async (req, res) => {
     role,
     bio: bio || undefined,
     university: university || undefined,
-    courses: Array.isArray(courses) && courses.length ? courses : undefined
+    courses: Array.isArray(courses) && courses.length ? courses : undefined,
+    major, 
+    year, 
+    location
   });
 
   try {

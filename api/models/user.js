@@ -14,7 +14,7 @@ const userSchema = new mongoose.Schema({
     email: {
         type: String, 
         required: true,
-        unqiue: true
+        unique: true
     },
     password: {
         type: String,
@@ -29,6 +29,18 @@ const userSchema = new mongoose.Schema({
         required: true,
     }],
     university: {
+        type: String,
+        required: true,
+    },
+    major: {
+        type: String,
+        required: true,
+    },
+    year: {
+        type: String,
+        required: true,
+    },
+    location: {
         type: String,
         required: true,
     },

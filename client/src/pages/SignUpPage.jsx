@@ -71,6 +71,9 @@ const canadianUniversities = [
   "First Nations University of Canada",
 ];
 
+const years = ["Freshman", "Sophomore", "Junior", "Senior"];
+const studyLocations = ["Coffee Shop", "Library", "Study Room", "Online"];
+
 export default function SignUpPage() {
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState({
@@ -83,10 +86,12 @@ export default function SignUpPage() {
     courses: [],
     university: "",
     otherUniversity: "",
+    major: "",
+    year: "",
+    location: "",
   });
-  
-  const navigate = useNavigate()
 
+  const navigate = useNavigate();
   const [currentCourse, setCurrentCourse] = useState("");
 
   const handleInputChange = (e) => {
@@ -125,23 +130,29 @@ export default function SignUpPage() {
   const handleBack = () => setCurrentStep((s) => s - 1);
 
   const handleSubmit = async () => {
-    const resolvedUniversity =
-      formData.university === "Other"
-        ? formData.otherUniversity.trim()
-        : formData.university;
+  const resolvedUniversity =
+    formData.university === "Other"
+      ? formData.otherUniversity.trim()
+      : formData.university;
 
-    const { otherUniversity, ...rest } = formData;
-    const payload = { ...rest, university: resolvedUniversity };
-
-    try {
-      const res = await api.post('/api/auth/signUp', payload);
-      console.log(res.data);
-      navigate('/homepage');
-
-    } catch (error) {
-      console.log(error?.response?.data || error.message);
-    }
+  const { otherUniversity, ...rest } = formData;
+  const payload = {
+    ...rest,
+    university: resolvedUniversity,
+    major: formData.major,     
+    year: formData.year,     
+    location: formData.location,
   };
+
+  try {
+    const res = await api.post("/api/auth/signUp", payload);
+    console.log(res.data);
+    navigate("/homepage");
+  } catch (error) {
+    console.log("Sign Up Failed:", error?.response?.data || error.message);
+  }
+};
+
 
   const isAccountStepValid = () => {
     const basic =
@@ -150,6 +161,9 @@ export default function SignUpPage() {
       formData.email.trim() &&
       formData.password &&
       formData.confirmPassword;
+      formData.major.trim() &&
+      formData.year &&
+      formData.location
     const pwMatch = formData.password === formData.confirmPassword;
     return Boolean(basic && pwMatch);
   };
@@ -162,13 +176,13 @@ export default function SignUpPage() {
         return formData.bio.trim().length > 0;
       case 2:
         return formData.courses.length > 0;
-      case 3: {
+      case 3:
         if (!formData.university) return false;
-        if (formData.university === "Other") {
-          return formData.otherUniversity.trim().length > 0;
-        }
+        if (formData.university === "Other" && !formData.otherUniversity.trim())
+          return false;
+        if (!formData.major.trim() || !formData.year || !formData.location)
+          return false;
         return true;
-      }
       default:
         return false;
     }
@@ -179,98 +193,70 @@ export default function SignUpPage() {
       case 0:
         return (
           <div className="space-y-6">
+            {/* Account Info */}
             <div>
-              <label
-                htmlFor="fullname"
-                className="block text-white text-sm font-medium mb-3"
-              >
+              <label className="block text-white text-sm font-medium mb-3">
                 Full Name
               </label>
               <input
                 type="text"
-                id="fullname"
                 name="fullname"
                 value={formData.fullname}
                 onChange={handleInputChange}
-                placeholder="your_fullname"
+                placeholder="Your full name"
                 className="w-full px-4 py-4 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-colors"
-                required
               />
             </div>
-
             <div>
-              <label
-                htmlFor="username"
-                className="block text-white text-sm font-medium mb-3"
-              >
+              <label className="block text-white text-sm font-medium mb-3">
                 Username
               </label>
               <input
                 type="text"
-                id="username"
                 name="username"
                 value={formData.username}
                 onChange={handleInputChange}
-                placeholder="your_username"
+                placeholder="Your username"
                 className="w-full px-4 py-4 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-colors"
-                required
               />
             </div>
-
             <div>
-              <label
-                htmlFor="email"
-                className="block text-white text-sm font-medium mb-3"
-              >
+              <label className="block text-white text-sm font-medium mb-3">
                 Email
               </label>
               <input
                 type="email"
-                id="email"
                 name="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                placeholder="your.email@torontomu.ca"
+                placeholder="your.email@domain.ca"
                 className="w-full px-4 py-4 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-colors"
-                required
               />
             </div>
-
             <div>
-              <label
-                htmlFor="password"
-                className="block text-white text-sm font-medium mb-3"
-              >
+              <label className="block text-white text-sm font-medium mb-3">
                 Password
               </label>
               <input
                 type="password"
-                id="password"
                 name="password"
                 value={formData.password}
                 onChange={handleInputChange}
                 placeholder="Enter your password"
                 className="w-full px-4 py-4 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-colors"
-                required
               />
             </div>
-
             <div>
-              <label
-                htmlFor="confirmPassword"
-                className="block text-white text-sm font-medium mb-3"
-              >
+              <label className="block text-white text-sm font-medium mb-3">
                 Confirm Password
               </label>
               <input
                 type="password"
-                id="confirmPassword"
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleInputChange}
                 placeholder="Confirm your password"
                 className="w-full px-4 py-4 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-colors"
-                required
               />
               {formData.confirmPassword &&
                 formData.password !== formData.confirmPassword && (
@@ -285,26 +271,19 @@ export default function SignUpPage() {
       case 1:
         return (
           <div className="space-y-6">
+            {/* Bio */}
             <div>
-              <label
-                htmlFor="bio"
-                className="block text-white text-sm font-medium mb-3"
-              >
+              <label className="block text-white text-sm font-medium mb-3">
                 Tell us about yourself
               </label>
               <textarea
-                id="bio"
                 name="bio"
                 value={formData.bio}
                 onChange={handleInputChange}
-                placeholder="Write a brief bio about your experience and interests..."
+                placeholder="Write a brief bio..."
                 rows={6}
                 className="w-full px-4 py-4 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-colors resize-none"
-                required
               />
-              <p className="text-gray-400 text-sm mt-2">
-                This will be shown on your profile.
-              </p>
             </div>
           </div>
         );
@@ -312,123 +291,137 @@ export default function SignUpPage() {
       case 2:
         return (
           <div className="space-y-6">
-            <div>
-              <h3 className="text-white text-lg font-medium mb-4">
-                What courses are you taking?
-              </h3>
-
-              {formData.courses.length > 0 && (
-                <div className="space-y-3 mb-6">
-                  {formData.courses.map((course, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between bg-gray-900 p-4 rounded-lg"
-                    >
-                      <p className="text-white font-medium">{course}</p>
-                      <button
-                        onClick={() => removeCourse(index)}
-                        className="text-red-400 hover:text-red-300 transition-colors"
-                        aria-label={`Remove ${course}`}
-                      >
-                        <X size={20} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <div className="space-y-4">
-                <div>
-                  <label
-                    htmlFor="courseName"
-                    className="block text-white text-sm font-medium mb-2"
-                  >
-                    Course Name
-                  </label>
-                  <input
-                    type="text"
-                    id="courseName"
-                    value={currentCourse}
-                    onChange={(e) => setCurrentCourse(e.target.value)}
-                    placeholder="e.g., CPS 109, MTH 140"
-                    className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-colors"
-                  />
-                </div>
-
+            {/* Courses */}
+            <h3 className="text-white text-lg font-medium mb-4">
+              What courses are you taking?
+            </h3>
+            {formData.courses.map((course, idx) => (
+              <div
+                key={idx}
+                className="flex items-center justify-between bg-gray-900 p-4 rounded-lg"
+              >
+                <p className="text-white">{course}</p>
                 <button
-                  type="button"
-                  onClick={addCourse}
-                  disabled={!currentCourse.trim()}
-                  className="flex items-center gap-2 px-4 py-2 bg-cyan-400 text-black rounded-lg font-medium hover:bg-cyan-300 disabled:bg-gray-700 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
+                  onClick={() => removeCourse(idx)}
+                  className="text-red-400 hover:text-red-300 transition-colors"
                 >
-                  <Plus size={18} />
-                  Add Course
+                  <X size={20} />
                 </button>
               </div>
-
-              {formData.courses.length === 0 && (
-                <p className="text-gray-400 text-sm mt-4">
-                  Add at least one course to continue.
-                </p>
-              )}
+            ))}
+            <div className="space-y-4 mt-4">
+              <input
+                type="text"
+                value={currentCourse}
+                onChange={(e) => setCurrentCourse(e.target.value)}
+                placeholder="Course name"
+                className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-colors"
+              />
+              <button
+                onClick={addCourse}
+                disabled={!currentCourse.trim()}
+                className="flex items-center gap-2 px-4 py-2 bg-cyan-400 text-black rounded-lg font-medium hover:bg-cyan-300 disabled:bg-gray-700 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
+              >
+                <Plus size={18} /> Add Course
+              </button>
             </div>
           </div>
         );
 
       case 3:
-        return (
-          <div className="space-y-6">
-            <div>
-              <label
-                htmlFor="university"
-                className="block text-white text-sm font-medium mb-3"
-              >
-                What university do you attend?
-              </label>
+  return (
+    <div className="space-y-6">
+      {/* University */}
+      <div>
+        <label htmlFor="university" className="block text-white text-sm font-medium mb-3">
+          University
+        </label>
+        <select
+          id="university"
+          name="university"
+          value={formData.university}
+          onChange={handleInputChange}
+          className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-colors"
+          required
+        >
+          <option value="">Select your university</option>
+          {canadianUniversities.map((u) => (
+            <option key={u} value={u}>{u}</option>
+          ))}
+          <option value="Other">Other</option>
+        </select>
+        {formData.university === "Other" && (
+          <input
+            type="text"
+            name="otherUniversity"
+            value={formData.otherUniversity}
+            onChange={handleInputChange}
+            placeholder="Type your university"
+            className="mt-2 w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white"
+          />
+        )}
+      </div>
 
-              <select
-                id="university"
-                name="university"
-                value={formData.university}
-                onChange={handleInputChange}
-                className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-colors"
-                required
-              >
-                <option value="">Select your university</option>
-                {canadianUniversities.map((u) => (
-                  <option key={u} value={u}>
-                    {u}
-                  </option>
-                ))}
-                <option value="Other">Other</option>
-              </select>
+      {/* Major */}
+      <div>
+        <label htmlFor="major" className="block text-white text-sm font-medium mb-2">
+          Major
+        </label>
+        <input
+          type="text"
+          id="major"
+          name="major"
+          value={formData.major}
+          onChange={handleInputChange}
+          placeholder="e.g., Computer Engineering"
+          className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white"
+          required
+        />
+      </div>
 
-              {formData.university === "Other" && (
-                <div className="mt-4">
-                  <label
-                    htmlFor="otherUniversity"
-                    className="block text-white text-sm font-medium mb-2"
-                  >
-                    Enter your university
-                  </label>
-                  <input
-                    type="text"
-                    id="otherUniversity"
-                    name="otherUniversity"
-                    value={formData.otherUniversity}
-                    onChange={handleInputChange}
-                    placeholder="Type your university name"
-                    className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-colors"
-                  />
-                </div>
-              )}
+      {/* Year */}
+      <div>
+        <label htmlFor="year" className="block text-white text-sm font-medium mb-2">
+          Year
+        </label>
+        <select
+          id="year"
+          name="year"
+          value={formData.year}
+          onChange={handleInputChange}
+          className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white"
+        >
+          <option value="">Select year</option>
+          <option value="Freshman">Freshman</option>
+          <option value="Sophomore">Sophomore</option>
+          <option value="Junior">Junior</option>
+          <option value="Senior">Senior</option>
+        </select>
+      </div>
 
-              <p className="text-gray-400 text-sm mt-2">
-                This helps others find you for in-person sessions.
-              </p>
-            </div>
-          </div>
-        );
+      {/* Study Location */}
+      <div>
+        <label htmlFor="location" className="block text-white text-sm font-medium mb-2">
+          Study Location
+        </label>
+        <select
+          id="location"
+          name="location"
+          value={formData.location}
+          onChange={handleInputChange}
+          className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white"
+          required
+        >
+          <option value="">Select location</option>
+          <option value="Coffee Shop">Coffee Shop</option>
+          <option value="Library">Library</option>
+          <option value="Study Room">Study Room</option>
+          <option value="Online">Online</option>
+        </select>
+      </div>
+    </div>
+  );
+
 
       default:
         return null;
@@ -444,7 +437,7 @@ export default function SignUpPage() {
       case 2:
         return "Courses you’re taking";
       case 3:
-        return "Your university";
+        return "Your university & study info";
       default:
         return "";
     }
@@ -459,7 +452,7 @@ export default function SignUpPage() {
       case 2:
         return "List the courses you’re currently taking";
       case 3:
-        return "Choose your university to help others find you";
+        return "Add your university, major, year, and preferred study location";
       default:
         return "";
     }
@@ -479,17 +472,12 @@ export default function SignUpPage() {
               </button>
             )}
             <div className="flex-1" />
-            <div className="text-gray-400 text-sm">
-              Step {currentStep + 1} of 4
-            </div>
+            <div className="text-gray-400 text-sm">Step {currentStep + 1} of 4</div>
           </div>
-
           <h1 className="text-3xl md:text-4xl font-bold text-cyan-400 mb-2">
             {getStepTitle()}
           </h1>
-          <p className="text-gray-300 text-base md:text-lg">
-            {getStepDescription()}
-          </p>
+          <p className="text-gray-300 text-base md:text-lg">{getStepDescription()}</p>
         </div>
 
         <div className="mb-8">
@@ -501,44 +489,42 @@ export default function SignUpPage() {
           </div>
         </div>
 
-        <div>
-          {renderStep()}
+        {renderStep()}
 
-          <div className="mt-8">
-            {currentStep < 3 ? (
-              <button
-                type="button"
-                onClick={handleNext}
-                disabled={!isStepValid()}
-                className="w-full bg-cyan-400 text-black py-4 px-6 rounded-lg font-semibold text-lg hover:bg-cyan-300 disabled:bg-gray-700 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-black"
-              >
-                Next
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={handleSubmit}
-                disabled={!isStepValid()}
-                className="w-full bg-cyan-400 text-black py-4 px-6 rounded-lg font-semibold text-lg hover:bg-cyan-300 disabled:bg-gray-700 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-black"
-              >
-                Complete Registration
-              </button>
-            )}
-          </div>
-        </div>
-
-      {currentStep === 0 && (
-        <div className="text-center mt-8">
-          <p className="text-gray-300">
-            Already have an account?{" "}
-            <Link
-              to="/signin"
-              className="text-cyan-400 hover:text-cyan-300 font-medium transition-colors"
+        <div className="mt-8">
+          {currentStep < 3 ? (
+            <button
+              type="button"
+              onClick={handleNext}
+              disabled={!isStepValid()}
+              className="w-full bg-cyan-400 text-black py-4 px-6 rounded-lg font-semibold text-lg hover:bg-cyan-300 disabled:bg-gray-700 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
             >
-              Sign in here
-            </Link>
-          </p>
+              Next
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={!isStepValid()}
+              className="w-full bg-cyan-400 text-black py-4 px-6 rounded-lg font-semibold text-lg hover:bg-cyan-300 disabled:bg-gray-700 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
+            >
+              Complete Registration
+            </button>
+          )}
         </div>
+
+        {currentStep === 0 && (
+          <div className="text-center mt-8">
+            <p className="text-gray-300">
+              Already have an account?{" "}
+              <Link
+                to="/signin"
+                className="text-cyan-400 hover:text-cyan-300 font-medium transition-colors"
+              >
+                Sign in here
+              </Link>
+            </p>
+          </div>
         )}
       </div>
     </div>
