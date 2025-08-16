@@ -1,6 +1,8 @@
 import React from 'react';
 import HomeCard from '../components/HomeCard.jsx';
 import Navbar from '../components/Navbar.jsx';
+import SearchBar from '../components/SearchBar.jsx';
+
 import { UsersRound, BookOpen, GraduationCap } from "lucide-react";
 
 export default function HomePage() {
@@ -76,6 +78,8 @@ export default function HomePage() {
           ))}
         </div>
       </div>
+      <SearchBar/>
+      
     </div>
   );
 }
