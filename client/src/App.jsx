@@ -1,5 +1,4 @@
 import SignUpPage from "./pages/SignUpPage.jsx";
-import HomePage from "./components/HomePage.jsx";
 import Listings from "./pages/ListingsPage.jsx";
 import SignInPage from "./pages/LoginPage.jsx";
 import DMChat from "./components/DMChat.jsx";
@@ -7,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import LoginPage from "./pages/LoginPage.jsx";
 import BrowsePage from "./pages/BrowsePage.jsx";
 import Navbar from "./components/Navbar.jsx";
+import HomePage from "./pages/HomePage.jsx";
 
 
 export default function App() {

@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from "react";
-import { GraduationCap, House, UsersRound, CircleUser, Menu, X } from "lucide-react";
+import { GraduationCap, House, UsersRound, CircleUser, Menu, X, MessageCircle } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 
 
@@ -27,12 +27,12 @@ export default function Navbar() {
     })();
   }, [location.key]);
 
-  const getButtonClass = (path) => {
-    const baseClass = "flex items-center gap-2 rounded-md px-4 py-1 cursor-pointer";
-    const activeClass = "bg-[#FFDBE9] text-black";
-    const inactiveClass = "text-black hover:bg-[#FFDBE9]";
-    return `${baseClass} ${location.pathname === path ? activeClass : inactiveClass}`;
-  };
+const getButtonClass = (path) => {
+  const baseClass = "flex items-center gap-2 rounded-md px-4 py-1 cursor-pointer";
+  const activeClass = "bg-[#8776E9] text-white";   // <-- changed text to white
+  const inactiveClass = "text-black hover:bg-[#FFDBE9]";
+  return `${baseClass} ${location.pathname === path ? activeClass : inactiveClass}`;
+};
 
   return (
     <nav className="bg-[#FAFAFF] sticky top-0 z-50 shadow-md px-4 md:px-20 py-4">
@@ -48,13 +48,20 @@ export default function Navbar() {
         {/* Desktop nav */}
         <div className="hidden md:flex gap-5 items-center">
 
-          <NavLink to="/" className={getButtonClass("/homepage")}>
-            <House className="w-4 h-4" />
+          <NavLink 
+  to="/" 
+  className={`${getButtonClass("/")}`}
+>
+            <House className="w-4 h-4]"/>
             Home
           </NavLink>
-          <NavLink to="/listings" className={getButtonClass("/listings")}>
+          <NavLink to="/listings" className= {getButtonClass("/listings") }>
             <UsersRound className="w-4 h-4" />
             Browse
+          </NavLink>
+          <NavLink to="/chat" className={getButtonClass("/chat")}>
+            <MessageCircle className="w-4 h-4" />
+            Message
           </NavLink>
           {!isAuthed && (
             <NavLink to="/signin" className={getButtonClass("/signin")}>
