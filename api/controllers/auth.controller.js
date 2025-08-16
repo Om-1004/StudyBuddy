@@ -3,19 +3,63 @@ import bcryptjs from "bcryptjs";
 import jwt from "jsonwebtoken"
 
 export const signup = async (req, res) => {
-    const { username, email, password } = req.body;
-    const hashedPassword = bcryptjs.hashSync(password, 12);
-    const newUser = new User({ username, email, password: hashedPassword });
+  const {
+    fullname,
+    username,
+    email,
+    password,
+    role,
+    bio,
+    courses,
+    university, 
+    major, 
+    year,
+    location
+  } = req.body;
 
-    try {
-        await newUser.save();
-        console.log("Sign UP");
-        res.status(201).json({ message: "User created successfully" });
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({ message: "Sign Up Failed" });
-    }
+  const hashedPassword = bcryptjs.hashSync(password, 12);
+
+  const newUser = new User({
+    fullname,
+    username,
+    email,
+    password: hashedPassword,
+    role,
+    bio: bio || undefined,
+    university: university || undefined,
+    courses: Array.isArray(courses) && courses.length ? courses : undefined,
+    major, 
+    year, 
+    location
+  });
+
+  try {
+    const savedUser = await newUser.save();
+    const token = jwt.sign({ id: savedUser._id }, process.env.JWT_SECRET);
+
+    res.cookie("accessToken", token, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+      maxAge: 1000 * 60 * 60 * 24
+    });
+
+    res.status(201).json({
+      message: "User created successfully",
+      userId: savedUser._id,
+      role: savedUser.role
+    });
+  } catch (error) {
+    console.error("Sign Up Failed:", error);
+    res.status(500).json({
+      message: "Sign Up Failed",
+      error: error.code === 11000
+        ? "Username or email already exists"
+        : error.message
+    });
+  }
 };
+
 
 export const signin = async (req, res) => {
     const { email, password } = req.body;
