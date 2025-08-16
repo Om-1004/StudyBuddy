@@ -402,6 +402,7 @@ export default function DMChat() {
                 <Smile className="w-4 h-4 text-gray-600" />
               </button>
             </div>
+            
 
             <button
               onClick={handleSendMessage}
