@@ -6,12 +6,14 @@ import DMChat from "./components/DMChat.jsx";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import LoginPage from "./pages/LoginPage.jsx";
 import BrowsePage from "./pages/BrowsePage.jsx";
+import Navbar from "./components/Navbar.jsx";
 
 
 export default function App() {
 
   return (
     <BrowserRouter>
+    <Navbar />
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/signup" element={<SignUpPage />} />

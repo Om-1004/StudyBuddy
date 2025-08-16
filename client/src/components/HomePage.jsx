@@ -39,7 +39,6 @@ export default function HomePage() {
 
   return (
     <div>
-      <Navbar />
 
       <div className="flex flex-col space-y-8 border text-center bg-[#F0F0FA] pb-20">
         
