@@ -7,15 +7,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Om-1004/TutorConnect.git"
+    "url": "git+https://github.com/Om-1004/StudyBuddy.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/Om-1004/TutorConnect/issues"
+    "url": "https://github.com/Om-1004/StudyBuddy/issues"
   },
-  "homepage": "https://github.com/Om-1004/TutorConnect#readme",
+  "homepage": "https://github.com/Om-1004/StudyBuddy#readme",
   "description": "",
   "dependencies": {
     "mongodb": "^6.18.0"
