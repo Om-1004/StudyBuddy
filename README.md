@@ -28,7 +28,7 @@ Studying at university can feel isolating especially for **commuter students** w
 
 ---
 
-## ⚡ Getting Started  
+##  Getting Started  
 
 ### Clone the repo  
 ```bash
